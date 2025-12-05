@@ -1,0 +1,11 @@
+node_modules
+.next
+build
+.gitignore
+.prettierrc.mjs
+.prettierignore
+*.md
+*.json
+*.yml
+*.yaml
+.DS_Store
