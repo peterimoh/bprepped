@@ -9,25 +9,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Settings, LogOut, CreditCard } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 const ProfileDropdown = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleProfile = () => {
-    navigate('/profile');
+    router.push('/profile');
   };
 
   const handleSettings = () => {
-    navigate('/settings');
+    router.push('/settings');
   };
 
   const handleTokens = () => {
-    navigate('/tokens');
+    router.push('/tokens');
   };
 
   const handleLogout = () => {
-    navigate('/');
+    router.push('/');
   };
 
   return (

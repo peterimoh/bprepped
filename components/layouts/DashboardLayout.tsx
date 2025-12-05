@@ -1,3 +1,4 @@
+'use client';
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,18 +15,18 @@ import {
   Briefcase,
   Layout,
 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import ProfileDropdown from '@/components/ProfileDropdown';
+import ProfileDropdown from '@/components/profile-dropdown';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -41,7 +42,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   ];
 
   const handleLogout = () => {
-    navigate('/');
+    router.push('/');
   };
 
   return (
@@ -53,7 +54,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex flex-shrink-0 items-center border-b border-border/30 px-6 py-8">
             <div
               className="group flex cursor-pointer items-center gap-3"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => router.push('/dashboard')}
             >
               <div className="rounded-2xl bg-gradient-to-br from-primary to-accent p-3 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg">
                 <FileText className="h-6 w-6 text-primary-foreground" />
@@ -67,9 +68,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-8">
             {menuItems.map((item) => {
               const isActive =
-                location.pathname === item.path ||
+                pathname === item.path ||
                 (item.path === '/interview' &&
-                  location.pathname.startsWith('/interview'));
+                  pathname.startsWith('/interview'));
               return (
                 <Button
                   key={item.path}
@@ -80,7 +81,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       ? 'border border-primary/30 bg-gradient-to-r from-primary/20 to-accent/20 text-primary shadow-md'
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                   )}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => router.push(item.path)}
                 >
                   <item.icon
                     className={cn(
@@ -118,7 +119,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {/* Mobile Logo */}
             <div
               className="flex cursor-pointer items-center gap-3 md:hidden"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => router.push('/dashboard')}
             >
               <div className="rounded-xl bg-gradient-to-br from-primary to-accent p-2 shadow-sm">
                 <FileText className="h-5 w-5 text-primary-foreground" />
@@ -171,9 +172,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-8">
                 {menuItems.map((item) => {
                   const isActive =
-                    location.pathname === item.path ||
+                    pathname === item.path ||
                     (item.path === '/interview' &&
-                      location.pathname.startsWith('/interview'));
+                      pathname.startsWith('/interview'));
                   return (
                     <Button
                       key={item.path}
@@ -185,7 +186,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                           : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                       )}
                       onClick={() => {
-                        navigate(item.path);
+                        router.push(item.path);
                         setMobileMenuOpen(false);
                       }}
                     >
