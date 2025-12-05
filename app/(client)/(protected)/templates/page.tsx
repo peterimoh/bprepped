@@ -15,7 +15,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import TemplateExtractor from '@/components/TemplateExtractor';
+import TemplateExtractor from '@/components/template-extractor';
 
 interface Template {
   id: string;
