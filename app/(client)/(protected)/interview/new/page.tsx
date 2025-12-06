@@ -14,7 +14,7 @@ import {
   Briefcase,
   Award,
 } from 'lucide-react';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
+import DashboardLayout from '@/components/layouts/dashboard-layout';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 

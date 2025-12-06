@@ -76,9 +76,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   key={item.path}
                   variant="ghost"
                   className={cn(
-                    'hover-lift w-full justify-start rounded-2xl px-4 py-4 text-base transition-all duration-300',
+                    'hover-lift w-full justify-start rounded-2xl p-4 text-base transition-all duration-300',
                     isActive
-                      ? 'border border-primary/30 bg-gradient-to-r from-primary/20 to-accent/20 text-primary shadow-md'
+                      ? 'border border-primary/30 bg-gradient-to-r from-primary/20 to-accent/20 text-primary shadow-sm'
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                   )}
                   onClick={() => router.push(item.path)}

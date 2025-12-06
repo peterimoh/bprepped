@@ -141,7 +141,7 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 px-10 py-6 text-lg transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                className="border-1 bg-white px-10 py-6 text-lg transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground"
                 onClick={() => navigate.push('/auth')}
               >
                 View Templates

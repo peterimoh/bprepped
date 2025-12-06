@@ -76,7 +76,7 @@ export default function Auth() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         </div>
 
-        <Card className="relative z-10 w-full max-w-md border shadow-elevated">
+        <Card className="relative z-10 w-full max-w-md border shadow-elevated bg-white">
           <CardHeader className="text-center">
             <div className="mb-4 flex justify-center">
               <Mail className="h-12 w-12 text-primary" />
@@ -133,7 +133,7 @@ export default function Auth() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
       </div>
 
-      <Card className="relative z-10 w-full max-w-md border shadow-elevated">
+      <Card className="relative z-10 w-full max-w-md border-2 shadow-elevated bg-white">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <FileText className="h-12 w-12 text-primary" />
