@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                Int              @id @default(autoincrement())
+  role              String?
+  fullName          String?             @map("full_name")
+  email             String?
+  phone             String?
+  password          String?
+  bio               String?
+  isActive          Boolean             @default(true) @map("is_active")
+  avatarUrl         String?             @map("avatar_url")
+  location          String?
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  links             Link[]
+  userProfile       UserProfile?
+  tokenBalance      TokenBalance?
+  tokenTransactions TokenTransaction[]
+  resumes           Resume[]
+  resumeDrafts      ResumeDraft[]
+  userExperiences   UserExperience[]
+  resumeScans       ResumeScan[]
+  interviewSessions InterviewSession[]
+  usageAnalytics    UsageAnalytic[]
+
+  @@map("users")
+}
+
+model Link {
+  id        Int   @id @default(autoincrement())
+  userId    Int   @map("user_id")
+  label     String?
+  link      String?
+  type      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("links")
+}
+
+model UserProfile {
+  id                  Int   @id @default(autoincrement())
+  userId              Int   @unique @map("user_id")
+  emailNotifications  Boolean? @map("email_notifications")
+  resumeTips          Boolean? @map("resume_tips")
+  jobAlerts           Boolean? @map("job_alerts")
+  profileVisibility   Boolean? @map("profile_visibility")
+  dataAnalytics       Boolean? @map("data_analytics")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model TokenBalance {
+  id              Int   @id @default(autoincrement())
+  userId          Int   @unique @map("user_id")
+  currentBalance  Int?     @map("current_balance")
+  totalPurchased  Int?     @map("total_purchased")
+  lastUpdated     DateTime? @map("last_updated")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_balances")
+}
+
+model TokenTransaction {
+  id              Int   @id @default(autoincrement())
+  userId          Int   @map("user_id")
+  amount          Int?
+  balanceAfter    Int?     @map("balance_after")
+  transactionType String?  @map("transaction_type")
+  featureType     String?  @map("feature_type")
+  description     String?
+  status          String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_transactions")
+}
+
+model ResumeTemplate {
+  id           Int   @id @default(autoincrement())
+  name         String?
+  type         String?
+  description  String?
+  sections     Int?
+  layout       String?
+  previewUrl   String?  @map("preview_url")
+  templateData Json?    @map("template_data")
+  isPublic     Boolean  @default(true) @map("is_public")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  resumes      Resume[]
+  resumeDrafts ResumeDraft[]
+
+  @@map("resume_templates")
+}
+
+model Resume {
+  id           Int   @id @default(autoincrement())
+  userId       Int   @map("user_id")
+  title        String?
+  templateId   Int?  @map("template_id")
+  content      Json?
+  personalInfo Json?    @map("personal_info")
+  summary      String?
+  experience   String?
+  education    String?
+  skills       String?
+  atsScore     Int?     @map("ats_score")
+  isActive     Boolean  @default(true) @map("is_active")
+  isDraft      Boolean  @default(false) @map("is_draft")
+  lastEdited   DateTime? @map("last_edited")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template        ResumeTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  resumeDrafts    ResumeDraft[]
+  resumeSections  ResumeSection[]
+  resumeScans     ResumeScan[]
+
+  @@map("resumes")
+}
+
+model ResumeDraft {
+  id         Int   @id @default(autoincrement())
+  userId     Int   @map("user_id")
+  resumeId   Int?  @map("resume_id")
+  templateId Int?  @map("template_id")
+  content    Json?
+  lastSaved  DateTime? @map("last_saved")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume   Resume?         @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  template ResumeTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@map("resume_drafts")
+}
+
+model ResumeSection {
+  id           Int   @id @default(autoincrement())
+  resumeId     Int   @map("resume_id")
+  sectionType  String?  @map("section_type")
+  sectionOrder Int?     @map("section_order")
+  content      Json?
+  isVisible    Boolean  @default(true) @map("is_visible")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("resume_sections")
+}
+
+model UserExperience {
+  id              Int    @id @default(autoincrement())
+  userId          Int    @map("user_id")
+  company         String?
+  position        String?
+  location        String?
+  startDate       DateTime? @map("start_date")
+  endDate         DateTime? @map("end_date")
+  isCurrent       Boolean   @default(false) @map("is_current")
+  description     String?
+  technologies    Json?
+  achievements    Json?
+  responsibilities Json?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_experiences")
+}
+
+model ResumeScan {
+  id              Int   @id @default(autoincrement())
+  userId          Int   @map("user_id")
+  resumeId        Int?  @map("resume_id")
+  jobTitle        String?  @map("job_title")
+  company         String?
+  jobDescription  String?  @map("job_description")
+  score           Int?
+  keywordsMatched Int?     @map("keywords_matched")
+  keywordsMissing Int?     @map("keywords_missing")
+  keywordsTotal   Int?     @map("keywords_total")
+  issues          Json?
+  suggestions     Json?
+  tokensUsed      Int?     @map("tokens_used")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("resume_scans")
+}
+
+model InterviewSession {
+  id                Int    @id @default(autoincrement())
+  userId            Int    @map("user_id")
+  jobTitle          String?   @map("job_title")
+  jobDescription    String?   @map("job_description") @db.Text
+  interviewer       Json?
+  metadata          Json?
+  score             Int?
+  questionsAnswered Int?      @map("questions_answered")
+  totalQuestions    Int?      @map("total_questions")
+  feedback          String?
+  strengths         Json?
+  improvements      Json?
+  durationMinutes   Int?      @map("duration_minutes")
+  tokensUsed        Int?      @map("tokens_used")
+  status            String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  completedAt       DateTime? @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("interview_sessions")
+}
+
+model UsageAnalytic {
+  id          Int   @id @default(autoincrement())
+  userId      Int   @map("user_id")
+  featureType String?  @map("feature_type")
+  tokensUsed  Int?     @map("tokens_used")
+  sessionData Json?    @map("session_data")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("usage_analytics")
+}
