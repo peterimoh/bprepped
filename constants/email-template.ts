@@ -6,7 +6,7 @@ export const defaultTemplate = `<!doctype html>
   <style>
     body { margin:0; padding:0; background:#f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     .wrapper { width:100%; table-layout:fixed; padding:30px 0; }
-    .container { max-width:600px; margin:0 auto; background:#ffffff; border-radius:6px; overflow:hidden; }
+    .container { max-width:600px; margin:0 auto; background:#f5f1ef; border-radius:6px; overflow:hidden; }
     .header { padding:24px; text-align:center; }
     .content { padding:24px; color:#111827; line-height:1.5; font-size:16px; }
     .btn { display:inline-block; padding:12px 20px; background:#2545e0; color:#ffffff !important; text-decoration:none; border-radius:6px; font-weight:600; }
