@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TemplateExtractor from '@/components/template-extractor';
+import { Path } from '@/lib/path';
 
 interface Template {
   id: string;
@@ -74,7 +75,7 @@ export default function Templates() {
     });
 
     // Navigate to resume builder
-    window.location.href = '/builder';
+    window.location.href = Path.Client.Protected.Builder;
   };
 
   const handleDeleteTemplate = (templateId: string) => {

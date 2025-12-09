@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 export default function NewScan() {
   const { toast } = useToast();
@@ -55,7 +56,7 @@ export default function NewScan() {
   };
 
   const handleBackToHistory = () => {
-    router.push('/scanner');
+    router.push(Path.Client.Protected.Scanner.Root);
   };
 
   const scanResults = {

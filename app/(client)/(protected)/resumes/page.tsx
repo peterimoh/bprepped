@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, Download, Edit, Trash2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Path, createPath } from '@/lib/path';
 
 export default function Resumes() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function Resumes() {
         </div>
         <Button
           size="lg"
-          onClick={() => router.push('/builder')}
+          onClick={() => router.push(Path.Client.Protected.Builder)}
           className="shadow-md"
         >
           <Plus className="mr-2 h-5 w-5" />
@@ -97,7 +98,7 @@ export default function Resumes() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => router.push(`/builder/${resume.id}`)}
+                    onClick={() => router.push(createPath.builder(resume.id.toString()))}
                   >
                     <Edit className="mr-1 h-4 w-4" />
                     Edit

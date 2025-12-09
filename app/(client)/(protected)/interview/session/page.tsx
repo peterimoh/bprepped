@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 export default function Session() {
   const { toast } = useToast();
@@ -212,7 +213,7 @@ export default function Session() {
     });
 
     setTimeout(() => {
-      router.push('/interview');
+      router.push(Path.Client.Protected.Interview.Root);
     }, 2000);
   };
 
@@ -271,7 +272,7 @@ export default function Session() {
       {/* Header with Call Duration */}
       <div className="glass flex items-center justify-between border-b border-border/30 p-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.push('/interview')}>
+          <Button variant="ghost" onClick={() => router.push(Path.Client.Protected.Interview.Root)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Leave Session
           </Button>

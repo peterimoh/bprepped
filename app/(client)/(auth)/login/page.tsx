@@ -1,6 +1,6 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import {
   Card,
@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,9 +22,11 @@ import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Logo } from '@/components/ui/logo';
-import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
+import { IsManagement } from '@/lib/is-management';
+import { Path } from '@/lib/path';
+import { useEffect } from 'react';
 
 const FormSchema = z.object({
   email: z.string().email(),
@@ -37,6 +38,7 @@ const FormSchema = z.object({
 type FormData = z.infer<typeof FormSchema>;
 
 export default function Login() {
+  const { data: session } = useSession();
   const router = useRouter();
   const form = useForm({
     resolver: zodResolver(FormSchema),
@@ -45,6 +47,14 @@ export default function Login() {
       password: '',
     },
   });
+
+  useEffect(() => {
+    if (session?.user) {
+      const isAdmin = IsManagement(session?.user);
+      isAdmin ? router.push(Path.Admin.Root) : router.push(Path.Client.Protected.Root);
+      router.refresh();
+    }
+  }, [session, router]);
 
   const onSubmit = async (value): Promise<void> => {
     try {
@@ -56,8 +66,6 @@ export default function Login() {
 
       if (!response?.error) {
         toast({ title: 'Welcome Back' });
-        router.push('/dashboard');
-        router.refresh();
       }
 
       if (!response.ok) {
@@ -127,7 +135,7 @@ export default function Login() {
           <div className="mt-4 space-y-2 text-center text-sm">
             <button
               type="button"
-              onClick={() => router.push('/forgot-password')}
+              onClick={() => router.push(Path.Client.Auth.ForgotPassword)}
               className="text-primary hover:underline"
             >
               Forgot your password?
@@ -136,7 +144,7 @@ export default function Login() {
             <div>
               <button
                 type="button"
-                onClick={() => router.push('/signup')}
+                onClick={() => router.push(Path.Client.Auth.Signup)}
                 className="text-primary hover:underline"
               >
                 Don't have an account? Sign up

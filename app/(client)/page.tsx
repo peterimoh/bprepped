@@ -1,6 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useSession } from 'next-auth/react';
 import {
   ArrowRight,
   CheckCircle,
@@ -15,7 +16,9 @@ import {
   Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Roles } from '@/lib/types';
 import Image from 'next/image';
+import { Path } from '@/lib/path';
 
 export default function Home() {
   const navigate = useRouter();
@@ -77,7 +80,7 @@ export default function Home() {
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div
             className="group flex cursor-pointer items-center gap-3"
-            onClick={() => navigate.push('/')}
+            onClick={() => navigate.push(Path.Client.Root)}
           >
             <Image
               src={
@@ -91,13 +94,13 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              onClick={() => navigate.push('/login')}
+              onClick={() => navigate.push(Path.Client.Auth.Login)}
               className="hidden transition-all duration-300 hover:bg-primary/10 sm:inline-flex"
             >
               Sign In
             </Button>
             <Button
-              onClick={() => navigate.push('/signup')}
+              onClick={() => navigate.push(Path.Client.Protected.Root)}
               className="border-0 bg-gradient-to-r from-primary to-accent text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-xl"
             >
               Get Started Free
@@ -136,7 +139,7 @@ export default function Home() {
               <Button
                 size="lg"
                 className="border-0 bg-gradient-to-r from-primary to-accent px-10 py-6 text-lg text-white shadow-xl transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-2xl"
-                onClick={() => navigate.push('/login')}
+                onClick={() => navigate.push(Path.Client.Protected.Builder)}
               >
                 Start Building Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -278,7 +281,7 @@ export default function Home() {
               <Button
                 size="lg"
                 className="border-0 bg-gradient-to-r from-primary to-accent text-white shadow-xl transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-2xl"
-                onClick={() => navigate.push('/signup')}
+                onClick={() => navigate.push(Path.Client.Auth.Signup)}
               >
                 Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -327,7 +330,7 @@ export default function Home() {
               size="lg"
               variant="secondary"
               className="hover:shadow-3xl bg-white px-12 py-7 text-lg text-primary shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-gray-100"
-              onClick={() => navigate.push('/signup')}
+              onClick={() => navigate.push(Path.Client.Protected.Resumes)}
             >
               Create Your Resume Now
               <ArrowRight className="ml-2 h-5 w-5" />

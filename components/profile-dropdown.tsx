@@ -15,19 +15,19 @@ const ProfileDropdown = () => {
   const router = useRouter();
 
   const handleProfile = () => {
-    router.push('/profile');
+    router.push(Path.Client.Protected.Profile);
   };
 
   const handleSettings = () => {
-    router.push('/settings');
+    router.push(Path.Client.Protected.Settings);
   };
 
   const handleTokens = () => {
-    router.push('/tokens');
+    router.push(Path.Client.Protected.Tokens);
   };
 
   const handleLogout = () => {
-    router.push('/');
+    router.push(Path.Client.Root);
   };
 
   return (

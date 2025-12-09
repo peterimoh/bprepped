@@ -26,6 +26,7 @@ import { CountryDropdown } from '@/components/ui/country-dropdown';
 import { Logo } from '@/components/ui/logo';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 const FormSchema = z.object({
   first_name: z.string().min(3, {
@@ -201,7 +202,7 @@ export default function Signup() {
             <div>
               <button
                 type="button"
-                onClick={() => router.push('/login')}
+                onClick={() => router.push(Path.Client.Auth.Login)}
                 className="text-primary hover:underline"
               >
                 Already have an account? Sign in

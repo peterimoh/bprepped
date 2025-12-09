@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 export default function Experiences() {
   const { toast } = useToast();
@@ -282,7 +283,7 @@ export default function Experiences() {
     });
 
     setIsCreateResumeOpen(false);
-    router.push('/builder');
+    router.push(Path.Client.Protected.Builder);
   };
 
   return (

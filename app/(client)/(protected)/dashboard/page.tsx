@@ -18,6 +18,7 @@ import {
   Award,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Path, createPath } from '@/lib/path';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -114,7 +115,7 @@ export default function Dashboard() {
               </CardDescription>
             </div>
             <Button
-              onClick={() => router.push('/tokens')}
+              onClick={() => router.push(Path.Client.Protected.Tokens)}
               className="border-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-600 hover:shadow-xl"
             >
               Buy Tokens
@@ -190,7 +191,7 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card
           className="group relative cursor-pointer overflow-hidden border-0 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-          onClick={() => router.push('/builder')}
+          onClick={() => router.push(Path.Client.Protected.Builder)}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 opacity-0 transition-opacity duration-500 group-hover:opacity-10"></div>
           <CardContent className="relative pb-8 pt-10 text-center">
@@ -207,7 +208,7 @@ export default function Dashboard() {
         </Card>
         <Card
           className="group relative cursor-pointer overflow-hidden border-0 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-          onClick={() => router.push('/scanner')}
+          onClick={() => router.push(Path.Client.Protected.Scanner.Root)}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-0 transition-opacity duration-500 group-hover:opacity-10"></div>
           <CardContent className="relative pb-8 pt-10 text-center">
@@ -224,7 +225,7 @@ export default function Dashboard() {
         </Card>
         <Card
           className="group relative cursor-pointer overflow-hidden border-0 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-          onClick={() => router.push('/interview')}
+          onClick={() => router.push(Path.Client.Protected.Interview.Root)}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-teal-500 opacity-0 transition-opacity duration-500 group-hover:opacity-10"></div>
           <CardContent className="relative pb-8 pt-10 text-center">
@@ -258,7 +259,7 @@ export default function Dashboard() {
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push('/resumes')}
+              onClick={() => router.push(Path.Client.Protected.Resumes)}
               className="transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
             >
               View All
@@ -304,7 +305,7 @@ export default function Dashboard() {
                   </div>
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/builder/${resume.id}`)}
+                    onClick={() => router.push(createPath.builder(resume.id.toString()))}
                     className="transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground"
                   >
                     Edit

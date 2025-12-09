@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 export default function Interviews() {
   const { toast } = useToast();
@@ -99,7 +100,7 @@ export default function Interviews() {
   };
 
   const handleNewPrep = () => {
-    router.push('/interview/new');
+    router.push(Path.Client.Protected.Interview.New);
   };
 
   const getScoreColor = (score: number) => {
@@ -379,7 +380,7 @@ export default function Interviews() {
             <Button
               className="w-full"
               size="lg"
-              onClick={() => router.push('/interview/new')}
+              onClick={() => router.push(Path.Client.Protected.Interview.New)}
             >
               <Plus className="mr-2 h-5 w-5" />
               Start New Interview Prep

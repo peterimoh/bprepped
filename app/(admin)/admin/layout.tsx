@@ -3,7 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Roles } from '@/lib/types';
+import { IsManagement } from '@/lib/is-management';
+import { Path } from '@/lib/path';
 
 export default function AdminLayout({
   children,
@@ -14,15 +15,16 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return; // Still loading
+    if (status === 'loading') return;
 
     if (!session) {
-      router.push('/login');
+      router.push(Path.Client.Auth.Login);
       return;
     }
 
-    if (session.user.role !== Roles.Admin && session.user.role !== Roles.SuperAdmin) {
-      router.push('/dashboard'); // Redirect to dashboard for non-admin users
+    const isAdmin = IsManagement(session.user);
+    if (!isAdmin) {
+      router.push(Path.Client.Protected.Root);
       return;
     }
   }, [session, status, router]);
@@ -31,8 +33,8 @@ export default function AdminLayout({
     return <div>Loading...</div>;
   }
 
-  if (!session || (session.user.role !== Roles.Admin && session.user.role !== Roles.SuperAdmin)) {
-    return null; // Will redirect in useEffect
+  if (!session || !isAdmin) {
+    return null;
   }
 
   return <>{children}</>;

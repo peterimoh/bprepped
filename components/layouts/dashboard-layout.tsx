@@ -19,6 +19,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import ProfileDropdown from '@/components/profile-dropdown';
+import { Path } from '@/lib/path';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -30,19 +31,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    { icon: FileText, label: 'My Resumes', path: '/resumes' },
-    { icon: Briefcase, label: 'Experiences', path: '/experiences' },
-    { icon: Layout, label: 'Templates', path: '/templates' },
-    { icon: Scan, label: 'Resume Scanner', path: '/scanner' },
-    { icon: MessageSquare, label: 'Interview Prep', path: '/interview' },
-    { icon: Coins, label: 'Tokens', path: '/tokens' },
-    { icon: BarChart3, label: 'Usage', path: '/usage' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: Home, label: 'Dashboard', path: Path.Client.Protected.Root },
+    { icon: FileText, label: 'My Resumes', path: Path.Client.Protected.Resumes },
+    { icon: Briefcase, label: 'Experiences', path: Path.Client.Protected.Experiences },
+    { icon: Layout, label: 'Templates', path: Path.Client.Protected.Templates },
+    { icon: Scan, label: 'Resume Scanner', path: Path.Client.Protected.Scanner.Root },
+    { icon: MessageSquare, label: 'Interview Prep', path: Path.Client.Protected.Interview.Root },
+    { icon: Coins, label: 'Tokens', path: Path.Client.Protected.Tokens },
+    { icon: BarChart3, label: 'Usage', path: Path.Client.Protected.Usage },
+    { icon: Settings, label: 'Settings', path: Path.Client.Protected.Settings },
   ];
 
   const handleLogout = () => {
-    router.push('/');
+    router.push(Path.Client.Root);
   };
 
   return (
@@ -54,7 +55,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex flex-shrink-0 items-center border-b border-border/30 px-6 py-8">
             <div
               className="group flex cursor-pointer items-center gap-3"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push(Path.Client.Protected.Root)}
             >
               <div className="rounded-2xl bg-gradient-to-br from-primary to-accent p-3 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg">
                 <FileText className="h-6 w-6 text-primary-foreground" />
@@ -69,8 +70,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {menuItems.map((item) => {
               const isActive =
                 pathname === item.path ||
-                (item.path === '/interview' &&
-                  pathname.startsWith('/interview'));
+                (item.path === Path.Client.Protected.Interview.Root &&
+                  pathname.startsWith(Path.Client.Protected.Interview.Root));
               return (
                 <Button
                   key={item.path}
@@ -119,7 +120,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {/* Mobile Logo */}
             <div
               className="flex cursor-pointer items-center gap-3 md:hidden"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push(Path.Client.Protected.Root)}
             >
               <div className="rounded-xl bg-gradient-to-br from-primary to-accent p-2 shadow-sm">
                 <FileText className="h-5 w-5 text-primary-foreground" />
@@ -173,8 +174,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 {menuItems.map((item) => {
                   const isActive =
                     pathname === item.path ||
-                    (item.path === '/interview' &&
-                      pathname.startsWith('/interview'));
+                    (item.path === Path.Client.Protected.Interview.Root &&
+                      pathname.startsWith(Path.Client.Protected.Interview.Root));
                   return (
                     <Button
                       key={item.path}

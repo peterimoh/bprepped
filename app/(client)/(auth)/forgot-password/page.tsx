@@ -25,6 +25,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Logo } from '@/components/ui/logo';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 const FormSchema = z.object({
   email: z.string().email(),
@@ -91,7 +92,7 @@ export default function ForgotPassword() {
           <div className="mt-4 text-center text-sm">
             <button
               type="button"
-              onClick={() => router.push('/login')}
+              onClick={() => router.push(Path.Client.Auth.Login)}
               className="mx-auto flex items-center gap-2 text-primary hover:underline"
             >
               <ArrowLeft className="h-4 w-4" />

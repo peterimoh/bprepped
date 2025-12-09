@@ -17,6 +17,7 @@ import {
 import DashboardLayout from '@/components/layouts/dashboard-layout';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Path, createPath } from '@/lib/path';
 
 export default function New() {
   const { toast } = useToast();
@@ -80,7 +81,7 @@ export default function New() {
     setTimeout(() => {
       setIsGenerating(false);
       router.push(
-        `/interview/session?job=${encodeURIComponent(jobTitle)}&interviewer=${selectedInterviewer}`
+        createPath.interviewSession(jobTitle, selectedInterviewer)
       );
       toast({
         title: 'Interview session ready!',
@@ -90,7 +91,7 @@ export default function New() {
   };
 
   const handleBack = () => {
-    router.push('/interview');
+    router.push(Path.Client.Protected.Interview.Root);
   };
 
   return (

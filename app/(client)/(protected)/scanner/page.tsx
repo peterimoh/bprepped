@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 export default function Scanner() {
   const { toast } = useToast();
@@ -108,7 +109,7 @@ export default function Scanner() {
   };
 
   const handleNewScan = () => {
-    router.push('/scanner/new');
+    router.push(Path.Client.Protected.Scanner.New);
   };
 
   return (
@@ -324,7 +325,7 @@ export default function Scanner() {
             <Button
               className="w-full"
               size="lg"
-              onClick={() => router.push('/scanner/new')}
+              onClick={() => router.push(Path.Client.Protected.Scanner.New)}
             >
               <Plus className="mr-2 h-5 w-5" />
               Create New Scan
