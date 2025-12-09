@@ -3,14 +3,20 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   devIndicators: false,
+  images: {
+    domains: ['res.cloudinary.com'],
+  },
 
-  async headers()  {
+  async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
           { key: 'Content-Type', value: 'application/json' },
-          { key: 'Access-Control-Allow-Credentials', value: 'http://localhost:3000' },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'http://localhost:3000',
+          },
           { key: 'Access-Control-Allow-Origin', value: '*' },
           {
             key: 'Access-Control-Allow-Methods',

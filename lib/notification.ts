@@ -8,7 +8,7 @@ import { defaultTemplate } from '@/constants/email-template';
 type TemplateData = Record<string, string | number | boolean>;
 
 export interface SendEmailOptions {
-  from: string;
+  from?: string;
   to: string | string[];
   subject: string;
   text?: string;
@@ -67,9 +67,11 @@ export class NotificationService {
     const lines = str.split('\n');
     while (lines.length && lines[0].trim() === '') lines.shift();
     while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
-    const indents = lines.filter(l => l.trim()).map(l => l.match(/^ */)![0].length);
+    const indents = lines
+      .filter((l) => l.trim())
+      .map((l) => l.match(/^ */)![0].length);
     const minIndent = indents.length ? Math.min(...indents) : 0;
-    return lines.map(l => l.slice(minIndent)).join('\n');
+    return lines.map((l) => l.slice(minIndent)).join('\n');
   }
 
   private markdownToSafeHtml(md: string): string {
@@ -97,7 +99,11 @@ export class NotificationService {
     });
   }
 
-  private wrapAndInline(htmlBody: string, template: string, templateData: TemplateData) {
+  private wrapAndInline(
+    htmlBody: string,
+    template: string,
+    templateData: TemplateData
+  ) {
     const bodyInlineStyles =
       'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;' +
       'color:#111827; font-size:16px; line-height:1.5;';
@@ -132,7 +138,8 @@ export class NotificationService {
     const templateData: TemplateData = Object.assign(
       {
         logoUrl: process.env.EMAIL_LOGO_URL || '',
-        footerText: process.env.EMAIL_FOOTER || 'If you did not ask for this, ignore it.',
+        footerText:
+          process.env.EMAIL_FOOTER || 'If you did not ask for this, ignore it.',
       },
       options.templateData || {}
     );
@@ -156,15 +163,17 @@ export class NotificationService {
 
     html = html || '';
     text = text || '';
-    
-    const maxAttempts = Number(process.env.EMAIL_SEND_ATTEMPTS || DEFAULT_MAX_ATTEMPTS);
+
+    const maxAttempts = Number(
+      process.env.EMAIL_SEND_ATTEMPTS || DEFAULT_MAX_ATTEMPTS
+    );
     let attempt = 0;
     let lastError: unknown = null;
 
     while (attempt < maxAttempts) {
       try {
         const info = await this.transporter.sendMail({
-          from: options.from,
+          from: options.from || process.env.EMAIL_FROM,
           to: options.to,
           subject: options.subject,
           text,
