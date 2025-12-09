@@ -4,12 +4,11 @@ export function IsManagement(user) {
   if (!user) return false;
 
   switch (user.role) {
-    case Role.Admin:
+    case Roles.Admin:
     case Roles.SuperAdmin:
       return true;
+      break;
     case Roles.User:
-      return false;
-    default:
       return false;
   }
 }

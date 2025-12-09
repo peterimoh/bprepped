@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
           { key: 'Content-Type', value: 'application/json' },
           {
             key: 'Access-Control-Allow-Credentials',
-            value: 'http://localhost:3000',
+            value: 'true',
           },
           { key: 'Access-Control-Allow-Origin', value: '*' },
           {

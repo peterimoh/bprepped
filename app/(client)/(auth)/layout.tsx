@@ -7,7 +7,7 @@ import { authOptions } from '@/auth';
 export default async function Layout({ children }: React.PropsWithChildren) {
   const session = await getServerSession(authOptions);
 
-  if (session) {
+  if (session?.user) {
     redirect('/dashboard');
   }
 

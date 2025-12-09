@@ -1,6 +1,6 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signIn, useSession } from 'next-auth/react';
+import { getSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import {
   Card,
@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -26,7 +27,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
 import { IsManagement } from '@/lib/is-management';
 import { Path } from '@/lib/path';
-import { useEffect } from 'react';
+import { useLogin } from '@/lib/api-hooks/auth';
 
 const FormSchema = z.object({
   email: z.string().email(),
@@ -38,8 +39,9 @@ const FormSchema = z.object({
 type FormData = z.infer<typeof FormSchema>;
 
 export default function Login() {
-  const { data: session } = useSession();
   const router = useRouter();
+  const { isPending, isError, error, mutate } = useLogin();
+
   const form = useForm({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -48,41 +50,27 @@ export default function Login() {
     },
   });
 
-  useEffect(() => {
-    if (session?.user) {
-      const isAdmin = IsManagement(session?.user);
-      isAdmin ? router.push(Path.Admin.Root) : router.push(Path.Client.Protected.Root);
-      router.refresh();
-    }
-  }, [session, router]);
-
   const onSubmit = async (value): Promise<void> => {
-    try {
-      const response = await signIn('credentials', {
-        email: value.email,
-        password: value.password,
-        redirect: false,
-      });
-
-      if (!response?.error) {
+    const result = await mutate(value, {
+      onSuccess: async () => {
         toast({ title: 'Welcome Back' });
-      }
 
-      if (!response.ok) {
-        toast({
-          title: 'Incorrect email or password',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Login Failed:', error);
-      toast({
-        title: 'Login Failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
+        const finalSession = await getSession();
+        const { user } = finalSession;
+        const isAdmin = await IsManagement(user);
+
+        if (isAdmin) {
+          router.push(Path.Admin.Root);
+          await router.refresh();
+        } else {
+          router.push(Path.Client.Protected.Root);
+          await router.refresh();
+        }
+      },
+    });
   };
+
+  const hasError = Object.entries(form.formState.errors).length > 0;
 
   return (
     <Card className="relative z-10 w-full max-w-md border-2 bg-white shadow-elevated">
@@ -100,6 +88,19 @@ export default function Login() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className={'space-y-6'}>
+            {isError && (
+              <Alert
+                variant={'destructive'}
+                className={
+                  'border-transparent bg-red-200 py-3 text-sm text-red-500'
+                }
+              >
+                <AlertDescription className={'capitalize'}>
+                  Error: {error.message}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <FormField
               control={form.control}
               name="email"
@@ -128,8 +129,12 @@ export default function Login() {
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending || hasError}
+            >
+              {isPending ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
           <div className="mt-4 space-y-2 text-center text-sm">

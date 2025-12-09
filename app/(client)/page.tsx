@@ -19,9 +19,22 @@ import { useRouter } from 'next/navigation';
 import { Roles } from '@/lib/types';
 import Image from 'next/image';
 import { Path } from '@/lib/path';
+import { IsManagement } from '@/lib/is-management';
+import ProfileDropdown from '@/components/profile-dropdown';
 
 export default function Home() {
   const navigate = useRouter();
+  const { data: session, status } = useSession();
+  const isAdmin = IsManagement(session?.user);
+
+  // Show loading state while session is loading to prevent hydration mismatch
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const features = [
     {
@@ -89,24 +102,39 @@ export default function Home() {
               alt={'logo'}
               width={200}
               height={200}
+              suppressHydrationWarning
             />
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              onClick={() => navigate.push(Path.Client.Auth.Login)}
-              className="hidden transition-all duration-300 hover:bg-primary/10 sm:inline-flex"
-            >
-              Sign In
-            </Button>
-            <Button
-              onClick={() => navigate.push(Path.Client.Protected.Root)}
-              className="border-0 bg-gradient-to-r from-primary to-accent text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-xl"
-            >
-              Get Started Free
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+          {status === 'authenticated' ? (
+            isAdmin ? (
+              <Button
+                variant="ghost"
+                onClick={() => navigate.push(Path.Client.Auth.Login)}
+                className="hidden transition-all duration-300 hover:bg-primary/10 sm:inline-flex"
+              >
+                Sign In
+              </Button>
+            ) : (
+              <ProfileDropdown />
+            )
+          ) : (
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => navigate.push(Path.Client.Auth.Login)}
+                className="hidden transition-all duration-300 hover:bg-primary/10 sm:inline-flex"
+              >
+                Sign In
+              </Button>
+              <Button
+                onClick={() => navigate.push(Path.Client.Protected.Root)}
+                className="border-0 bg-gradient-to-r from-primary to-accent text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-xl"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -297,6 +325,7 @@ export default function Home() {
                   alt={'logo'}
                   fill
                   objectFit="cover"
+                  suppressHydrationWarning
                 />
               </div>
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-success/20 to-primary/20 blur-2xl"></div>
@@ -350,6 +379,7 @@ export default function Home() {
               alt={'logo'}
               width={180}
               height={180}
+              suppressHydrationWarning
             />
           </div>
           <p className="text-muted-foreground">

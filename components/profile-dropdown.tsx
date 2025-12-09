@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +11,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Settings, LogOut, CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Path } from '@/lib/path';
 
 const ProfileDropdown = () => {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleProfile = () => {
     router.push(Path.Client.Protected.Profile);
@@ -27,7 +30,7 @@ const ProfileDropdown = () => {
   };
 
   const handleLogout = () => {
-    router.push(Path.Client.Root);
+    signOut();
   };
 
   return (

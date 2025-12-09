@@ -1,10 +1,10 @@
 'use client';
-
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { IsManagement } from '@/lib/is-management';
 import { Path } from '@/lib/path';
+import { Providers } from '@/components/providers/session-provider';
 
 export default function AdminLayout({
   children,
@@ -23,6 +23,7 @@ export default function AdminLayout({
     }
 
     const isAdmin = IsManagement(session.user);
+
     if (!isAdmin) {
       router.push(Path.Client.Protected.Root);
       return;
@@ -33,9 +34,5 @@ export default function AdminLayout({
     return <div>Loading...</div>;
   }
 
-  if (!session || !isAdmin) {
-    return null;
-  }
-
-  return <>{children}</>;
+  return <Providers>{children}</Providers>;
 }
