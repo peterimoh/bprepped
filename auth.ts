@@ -40,7 +40,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           const isHashVerified = await argon.verify(
-            user.password,
+            user.password as string,
             credentials.password || ''
           );
 
@@ -85,6 +85,8 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Account disabled, contact support');
           case AuthErrorCode.INVALID_CREDENTIALS:
             throw new Error('invalid email or password');
+          default:
+            throw new Error('Authentication error');
         }
       } else {
         return true;

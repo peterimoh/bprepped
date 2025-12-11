@@ -42,7 +42,7 @@ export default function Login() {
   const router = useRouter();
   const { isPending, isError, error, mutate } = useLogin();
 
-  const form = useForm({
+  const form = useForm<FormData>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       email: '',

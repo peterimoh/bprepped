@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,7 +25,6 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { CountryDropdown } from '@/components/ui/country-dropdown';
 import { Logo } from '@/components/ui/logo';
-import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { IsManagement } from '@/lib/is-management';
 import { Path } from '@/lib/path';
@@ -34,7 +32,6 @@ import {
   useRegister,
   useLogin,
   RegisterCredentials,
-  RegisterError,
 } from '@/lib/api-hooks/auth';
 
 const FormSchema = z.object({
@@ -42,15 +39,19 @@ const FormSchema = z.object({
     .string()
     .min(2, 'First name must be at least 2 characters')
     .max(50, 'First name must not exceed 50 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+    .regex(
+      /^[a-zA-Z\s'-]+$/,
+      'First name can only contain letters, spaces, hyphens, and apostrophes'
+    ),
   last_name: z
     .string()
     .min(2, 'Last name must be at least 2 characters')
     .max(50, 'Last name must not exceed 50 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
-  email: z
-    .string()
-    .email('Please provide a valid email address'),
+    .regex(
+      /^[a-zA-Z\s'-]+$/,
+      'Last name can only contain letters, spaces, hyphens, and apostrophes'
+    ),
+  email: z.string().email('Please provide a valid email address'),
   phone: z
     .string()
     .min(10, 'Phone number must be at least 10 digits')
@@ -75,7 +76,7 @@ type FormData = z.infer<typeof FormSchema>;
 
 export default function Signup() {
   const router = useRouter();
-  const { isPending, isError, error, mutate } = useRegister<RegisterError>();
+  const { isPending, isError, error, mutate } = useRegister();
   const {
     isPending: isLoginPending,
     mutate: loginMutate,

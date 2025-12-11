@@ -8,11 +8,7 @@ import { formatRequestError } from '@/lib/backend/utils/request-error-handler';
 import { ValidationError } from '@/lib/backend/utils/custom-error';
 
 const schema = z.object({
-  email: z
-    .string()
-    .email('Please provide a valid email address')
-    .toLowerCase()
-    .trim(),
+  email: z.string().email('Please provide a valid email address').trim(),
   phone: z
     .string()
     .min(10, 'Phone number must be at least 10 digits')
@@ -68,7 +64,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      if (existingUser.email.toLowerCase() === data.email.toLowerCase()) {
+      if (existingUser.email?.toLowerCase() === data.email.toLowerCase()) {
         throw new ValidationError('email already exists');
       }
       if (existingUser.phone === data.phone) {
@@ -102,7 +98,7 @@ export async function POST(request: Request) {
         data: {
           userId: user.id,
           currentBalance: 10,
-          totalPurchased: 0,
+          totalPurchased: 10,
         },
       });
 

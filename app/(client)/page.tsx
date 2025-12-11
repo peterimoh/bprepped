@@ -30,8 +30,8 @@ export default function Home() {
   // Show loading state while session is loading to prevent hydration mismatch
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -109,10 +109,10 @@ export default function Home() {
             isAdmin ? (
               <Button
                 variant="ghost"
-                onClick={() => navigate.push(Path.Client.Auth.Login)}
-                className="hidden transition-all duration-300 hover:bg-primary/10 sm:inline-flex"
+                onClick={() => navigate.push(Path.Admin.Root)}
+                className="border-0 bg-gradient-to-r from-primary to-accent text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-xl"
               >
-                Sign In
+                Go to dashboard
               </Button>
             ) : (
               <ProfileDropdown />

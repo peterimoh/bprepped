@@ -253,3 +253,13 @@ model UsageAnalytic {
 
   @@map("usage_analytics")
 }
+
+model PasswordResetToken {
+  id Int @id @default(autoincrement())
+  email String
+  token String @unique
+  expires DateTime
+
+  @@unique([email, token])
+  @@map("password_reset_token")
+}

@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "migration:up": "npx prisma migrate dev --name init",
-    "generate-client": "npx prisma generate"
+    "generate-client": "npx prisma generate",
+    "preview-db": "npx prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -75,6 +76,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^13.0.0",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },
