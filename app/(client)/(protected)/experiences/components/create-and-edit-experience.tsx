@@ -188,16 +188,6 @@ export function CreateAndEditExperience({
           toast.error(`Failed to create experience: ${error.error}`);
         },
       });
-    } else {
-      // updateMutation.mutate(submitData, {
-      //   onSuccess: () => {
-      //     toast.success('Experience updated successfully!');
-      //     onCancel();
-      //   },
-      //   onError: (error) => {
-      //     toast.error(`Failed to update experience: ${error.error}`);
-      //   },
-      // });
     }
   };
 
