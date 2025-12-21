@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText,
   Scan,
@@ -19,33 +20,78 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Path, createPath } from '@/lib/path';
+import { useGetKPI } from '@/lib/api-hooks/kpi';
+import { useGetResumes } from '@/lib/api-hooks/resumes';
+
+function StatSkeleton() {
+  return (
+    <Card className="group relative overflow-hidden border-0 shadow-lg">
+      <CardContent className="relative pb-6 pt-8">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton className="h-16 w-16 rounded-2xl" />
+          <Skeleton className="h-5 w-12" />
+        </div>
+        <div>
+          <Skeleton className="mb-2 h-4 w-32" />
+          <Skeleton className="h-10 w-16" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function KPISkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-2">
+          <Skeleton className="h-16 w-32" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <Skeleton className="h-5 w-20" />
+      </div>
+      <Skeleton className="h-4 w-full" />
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const router = useRouter();
+  const { data, isLoading, isError, error } = useGetKPI();
+  const { data: resumeData } = useGetResumes({
+    page: 1,
+    limit: 20,
+  });
+  console.log(resumeData);
 
   const stats = [
     {
       label: 'Resumes Created',
-      value: '3',
+      value: data?.resume_count ?? 0,
       icon: FileText,
       color: 'from-blue-500 to-cyan-500',
       trend: '+12%',
     },
     {
       label: 'Scans Performed',
-      value: '7',
+      value: data?.scan_count ?? 0,
       icon: Scan,
       color: 'from-purple-500 to-pink-500',
       trend: '+25%',
     },
     {
       label: 'Interview Preps',
-      value: '2',
+      value: data?.interview_prep_count ?? 0,
       icon: MessageSquare,
       color: 'from-green-500 to-teal-500',
       trend: '+8%',
     },
   ];
+
+  const currentBalance = data?.current_balance ?? 0;
+  const totalPurchased = data?.total_purchased ?? 0;
+  const remainingPercentage =
+    totalPurchased > 0 ? (currentBalance / totalPurchased) * 100 : 0;
 
   const recentResumes = [
     {
@@ -83,7 +129,7 @@ export default function Dashboard() {
               <Award className="h-6 w-6" />
             </div>
             <span className="text-sm font-medium text-white/90">
-              Welcome back to ResumeAI
+              Welcome back to B-Prepped AI
             </span>
           </div>
           <h1 className="mb-4 text-4xl font-bold md:text-6xl">
@@ -123,68 +169,80 @@ export default function Dashboard() {
           </div>
         </CardHeader>
         <CardContent className="relative">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
-                <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-6xl font-bold text-transparent">
-                  150
-                </span>
-                <span className="text-xl text-muted-foreground">
-                  / 200 tokens
-                </span>
+          {isLoading ? (
+            <KPISkeleton />
+          ) : isError ? (
+            <div className="space-y-4">
+              <p className="text-sm text-destructive">
+                {error?.error || 'Failed to load token balance'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-6xl font-bold text-transparent">
+                    {currentBalance}
+                  </span>
+                  <span className="text-xl text-muted-foreground">
+                    / {totalPurchased} tokens
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="font-medium">
+                    {Math.round(remainingPercentage)}% remaining
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                <TrendingUp className="h-4 w-4" />
-                <span className="font-medium">75% used</span>
+              <div className="relative">
+                <Progress
+                  value={remainingPercentage}
+                  className="h-4 bg-amber-100 dark:bg-amber-950/30"
+                />
+                <div
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-orange-400"
+                  style={{ width: `${remainingPercentage}%` }}
+                ></div>
               </div>
             </div>
-            <div className="relative">
-              <Progress
-                value={75}
-                className="h-4 bg-amber-100 dark:bg-amber-950/30"
-              />
-              <div
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-orange-400"
-                style={{ width: '75%' }}
-              ></div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Enhanced Stats Grid */}
       <div className="grid gap-6 md:grid-cols-3">
-        {stats.map((stat, index) => (
-          <Card
-            key={index}
-            className="group relative overflow-hidden border-0 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-          >
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
-            ></div>
-            <CardContent className="relative pb-6 pt-8">
-              <div className="mb-4 flex items-center justify-between">
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, index) => (
+              <StatSkeleton key={index} />
+            ))
+          : stats.map((stat, index) => (
+              <Card
+                key={index}
+                className="group relative overflow-hidden border-0 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+              >
                 <div
-                  className={`rounded-2xl bg-gradient-to-br p-4 ${stat.color} shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl`}
-                >
-                  <stat.icon className="h-8 w-8 text-white" />
-                </div>
-                <div className="flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400">
-                  <TrendingUp className="h-4 w-4" />
-                  {stat.trend}
-                </div>
-              </div>
-              <div>
-                <p className="mb-2 text-sm font-medium text-muted-foreground">
-                  {stat.label}
-                </p>
-                <p className="text-4xl font-bold text-foreground">
-                  {stat.value}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
+                ></div>
+                <CardContent className="relative pb-6 pt-8">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div
+                      className={`rounded-2xl bg-gradient-to-br p-4 ${stat.color} shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl`}
+                    >
+                      <stat.icon className="h-8 w-8 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">
+                      {stat.label}
+                    </p>
+                    <p className="text-4xl font-bold text-foreground">
+                      {stat.value}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
       </div>
 
       {/* Enhanced Quick Actions */}
@@ -305,7 +363,9 @@ export default function Dashboard() {
                   </div>
                   <Button
                     variant="outline"
-                    onClick={() => router.push(createPath.builder(resume.id.toString()))}
+                    onClick={() =>
+                      router.push(createPath.builder(resume.id.toString()))
+                    }
                     className="transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground"
                   >
                     Edit

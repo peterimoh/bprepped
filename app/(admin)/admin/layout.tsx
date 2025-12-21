@@ -23,7 +23,6 @@ export default function AdminLayout({
     }
 
     const isAdmin = IsManagement(session.user);
-
     if (!isAdmin) {
       router.push(Path.Client.Protected.Root);
       return;

@@ -58,18 +58,29 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.role = user.role;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password: _, ...userWithoutPassword } = user as typeof user & {
+          password?: string;
+        };
+        token.user = userWithoutPassword;
+        // Explicitly set token.role for middleware compatibility
+        token.role = userWithoutPassword.role || undefined;
+        token.id = String(userWithoutPassword.id);
+        token.email = userWithoutPassword.email || '';
       }
       return token;
     },
 
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.role = token.role as string;
+      if (token && session.user && token.user) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password: _, ...userWithoutPassword } =
+          token.user as typeof token.user & { password?: string };
+        session.user = userWithoutPassword as typeof session.user;
+        // Ensure role is set on session.user
+        if (token.role) {
+          session.user.role = token.role;
+        }
       }
       return session;
     },

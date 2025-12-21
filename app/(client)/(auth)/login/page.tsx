@@ -51,7 +51,7 @@ export default function Login() {
   });
 
   const onSubmit = async (value): Promise<void> => {
-    const result = await mutate(value, {
+    await mutate(value, {
       onSuccess: async () => {
         toast({ title: 'Welcome Back' });
 
@@ -61,10 +61,10 @@ export default function Login() {
 
         if (isAdmin) {
           router.push(Path.Admin.Root);
-          await router.refresh();
+          router.refresh();
         } else {
           router.push(Path.Client.Protected.Root);
-          await router.refresh();
+          router.refresh();
         }
       },
     });

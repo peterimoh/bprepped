@@ -180,6 +180,7 @@ model UserExperience {
   company         String?
   position        String?
   location        String?
+  employmentType  String?   @map("employment_type")
   startDate       DateTime? @map("start_date")
   endDate         DateTime? @map("end_date")
   isCurrent       Boolean   @default(false) @map("is_current")

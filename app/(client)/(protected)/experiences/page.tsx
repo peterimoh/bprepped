@@ -33,10 +33,23 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Path } from '@/lib/path';
+import {
+  useCreateUserExperience,
+  useGetExperiences,
+} from '@/lib/api-hooks/experiences';
+import { EmptyRecordCard } from '@/components/ui/empty-record-card';
+import {
+  CreateAndEditExperience,
+  CreateResumeDialog,
+  ExperienceCard,
+} from './components';
 
 export default function Experiences() {
   const { toast } = useToast();
   const router = useRouter();
+  // const { data } = useGetExperiences();
+  // const { mutate, isPending, isError, error } = useCreateUserExperience();
+
   const [experiences, setExperiences] = useState([
     {
       id: 1,
@@ -227,10 +240,6 @@ export default function Experiences() {
     });
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   const handleExperienceSelection = (
     experienceId: number,
     checked: boolean
@@ -298,173 +307,17 @@ export default function Experiences() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Dialog
+          <CreateResumeDialog
             open={isCreateResumeOpen}
             onOpenChange={setIsCreateResumeOpen}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline" disabled={experiences.length === 0}>
-                <FileText className="mr-2 h-4 w-4" />
-                Create Resume from Experiences
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">
-                  Create Resume from Experiences
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-6">
-                {/* Template Selection */}
-                <div>
-                  <h3 className="mb-4 text-lg font-semibold">
-                    Choose Template
-                  </h3>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {templates.map((template) => (
-                      <Card
-                        key={template.id}
-                        className={`cursor-pointer border transition-all ${
-                          selectedTemplate === template.id
-                            ? 'shadow-lg ring-2 ring-primary'
-                            : 'hover:shadow-md'
-                        }`}
-                        onClick={() => setSelectedTemplate(template.id)}
-                      >
-                        <CardContent className="pt-6">
-                          <div className="mb-3 flex aspect-[8.5/11] items-center justify-center rounded bg-muted/30">
-                            <FileText className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                          <h4 className="font-semibold text-foreground">
-                            {template.name}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {template.preview}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Experience Selection */}
-                <div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">
-                      Select Experiences to Include
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="selectAll"
-                        checked={
-                          selectedExperiences.length === experiences.length &&
-                          experiences.length > 0
-                        }
-                        onCheckedChange={handleSelectAll}
-                      />
-                      <Label htmlFor="selectAll" className="text-sm">
-                        Select All
-                      </Label>
-                    </div>
-                  </div>
-
-                  <div className="max-h-60 space-y-3 overflow-y-auto">
-                    {experiences.map((experience) => (
-                      <Card key={experience.id} className="p-4">
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            id={`exp-${experience.id}`}
-                            checked={selectedExperiences.includes(
-                              experience.id
-                            )}
-                            onCheckedChange={(checked) =>
-                              handleExperienceSelection(
-                                experience.id,
-                                checked as boolean
-                              )
-                            }
-                          />
-                          <div className="flex-1">
-                            <Label
-                              htmlFor={`exp-${experience.id}`}
-                              className="cursor-pointer"
-                            >
-                              <div className="mb-2 flex items-center gap-3">
-                                <Building className="h-4 w-4 text-primary" />
-                                <h4 className="font-semibold text-foreground">
-                                  {experience.company}
-                                </h4>
-                              </div>
-                              <div className="mb-2 flex items-center gap-2">
-                                <Briefcase className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-sm font-medium text-foreground">
-                                  {experience.position}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  <span>{experience.location}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>
-                                    {experience.startDate} -{' '}
-                                    {experience.endDate}
-                                  </span>
-                                </div>
-                              </div>
-                              {experience.technologies.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-1">
-                                  {experience.technologies
-                                    .slice(0, 3)
-                                    .map((tech, index) => (
-                                      <Badge
-                                        key={index}
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        {tech}
-                                      </Badge>
-                                    ))}
-                                  {experience.technologies.length > 3 && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      +{experience.technologies.length - 3} more
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
-                            </Label>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-3 border-t pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsCreateResumeOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateResume}
-                    disabled={selectedExperiences.length === 0}
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    Create Resume ({selectedExperiences.length} selected)
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+            experiences={selectedExperiences}
+            templates={[]}
+            handleCreateResume={handleCreateResume}
+            selectedExperiences={selectedExperiences}
+            selectedTemplate={selectedTemplate}
+            setSelectedTemplate={setSelectedTemplate}
+            onSelectAll={handleSelectAll}
+          />
           <Button onClick={handleAddExperience}>
             <Plus className="mr-2 h-4 w-4" />
             Add Experience
@@ -474,310 +327,42 @@ export default function Experiences() {
 
       {/* Add/Edit Experience Form */}
       {(isAddingExperience || editingExperience) && (
-        <Card className="border shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              {editingExperience ? 'Edit Experience' : 'Add New Experience'}
-              <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
-                <X className="h-4 w-4" />
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                  <Briefcase className="h-5 w-5" />
-                  Basic Information
-                </h3>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company Name *</Label>
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) =>
-                      handleInputChange('company', e.target.value)
-                    }
-                    placeholder="e.g. TechCorp Solutions"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position *</Label>
-                  <Input
-                    id="position"
-                    value={formData.position}
-                    onChange={(e) =>
-                      handleInputChange('position', e.target.value)
-                    }
-                    placeholder="e.g. Senior Frontend Developer"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) =>
-                      handleInputChange('location', e.target.value)
-                    }
-                    placeholder="e.g. San Francisco, CA"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">Start Date *</Label>
-                    <Input
-                      id="startDate"
-                      type="month"
-                      value={formData.startDate}
-                      onChange={(e) =>
-                        handleInputChange('startDate', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">End Date</Label>
-                    <Input
-                      id="endDate"
-                      type="month"
-                      value={formData.endDate}
-                      onChange={(e) =>
-                        handleInputChange('endDate', e.target.value)
-                      }
-                      disabled={formData.current}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                  <Award className="h-5 w-5" />
-                  Experience Details
-                </h3>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      handleInputChange('description', e.target.value)
-                    }
-                    placeholder="Brief overview of your role and responsibilities..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="technologies">Technologies Used</Label>
-                  <Input
-                    id="technologies"
-                    value={formData.technologies}
-                    onChange={(e) =>
-                      handleInputChange('technologies', e.target.value)
-                    }
-                    placeholder="React, TypeScript, Node.js, AWS (comma separated)"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="achievements">Key Achievements</Label>
-                  <Textarea
-                    id="achievements"
-                    value={formData.achievements}
-                    onChange={(e) =>
-                      handleInputChange('achievements', e.target.value)
-                    }
-                    placeholder="• Improved performance by 40%&#10;• Led team of 5 developers&#10;• Reduced bugs by 60%"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="responsibilities">Responsibilities</Label>
-                  <Textarea
-                    id="responsibilities"
-                    value={formData.responsibilities}
-                    onChange={(e) =>
-                      handleInputChange('responsibilities', e.target.value)
-                    }
-                    placeholder="• Developed frontend applications&#10;• Conducted code reviews&#10;• Mentored junior developers"
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="outline" onClick={handleCancelEdit}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveExperience}>
-                <Save className="mr-2 h-4 w-4" />
-                {editingExperience ? 'Update' : 'Save'} Experience
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <CreateAndEditExperience
+          experience={selectedExperiences}
+          actionType={'edit'}
+          onCancel={handleCancelEdit}
+        />
       )}
 
-      {/* Experiences List */}
       <div className="space-y-6">
         {experiences.map((experience) => (
-          <Card
+          <ExperienceCard
             key={experience.id}
-            className="border shadow-card transition-all duration-300 hover:shadow-lg"
-          >
-            <CardContent className="pt-6">
-              <div className="mb-4 flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-3">
-                    <Building className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-bold text-foreground">
-                      {experience.company}
-                    </h3>
-                  </div>
-                  <div className="mb-3 flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-lg font-semibold text-foreground">
-                      {experience.position}
-                    </span>
-                  </div>
-                  <div className="mb-3 flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>{experience.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {experience.startDate} - {experience.endDate}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditExperience(experience)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteExperience(experience.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {experience.description && (
-                <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                  {experience.description}
-                </p>
-              )}
-
-              {experience.technologies.length > 0 && (
-                <div className="mb-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Code className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">
-                      Technologies
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {experience.technologies.map((tech, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="border-primary/20 bg-primary/10 text-primary"
-                      >
-                        {tech}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid gap-6 md:grid-cols-2">
-                {experience.responsibilities.length > 0 && (
-                  <div>
-                    <div className="mb-2 flex items-center gap-2">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-semibold text-foreground">
-                        Responsibilities
-                      </span>
-                    </div>
-                    <ul className="space-y-1">
-                      {experience.responsibilities.map(
-                        (responsibility, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start gap-2 text-sm text-muted-foreground"
-                          >
-                            <span className="mt-1 text-primary">•</span>
-                            <span>{responsibility}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {experience.achievements.length > 0 && (
-                  <div>
-                    <div className="mb-2 flex items-center gap-2">
-                      <Award className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-semibold text-foreground">
-                        Key Achievements
-                      </span>
-                    </div>
-                    <ul className="space-y-1">
-                      {experience.achievements.map((achievement, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 text-sm text-muted-foreground"
-                        >
-                          <span className="mt-1 text-success">•</span>
-                          <span>{achievement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+            id={experience.id}
+            company={experience.company}
+            position={experience.position}
+            description={experience.description}
+            location={experience.location}
+            startDate={experience.startDate}
+            endDate={experience.endDate}
+            onEdit={() => handleEditExperience(experience)}
+            onDelete={() => handleDeleteExperience(experience.id)}
+            technologies={experience.technologies}
+            responsibilities={experience.responsibilities}
+            achievements={experience.achievements}
+          />
         ))}
       </div>
 
       {experiences.length === 0 && !isAddingExperience && (
-        <Card className="border shadow-card">
-          <CardContent className="pb-20 pt-20 text-center">
-            <Briefcase className="mx-auto mb-4 h-16 w-16 text-muted-foreground opacity-50" />
-            <h3 className="mb-2 text-xl font-semibold text-foreground">
-              No work experience yet
-            </h3>
-            <p className="mb-6 text-muted-foreground">
-              Start building your professional profile by adding your first work
-              experience.
-            </p>
-            <Button onClick={handleAddExperience}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Your First Experience
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyRecordCard
+          title={'No work experience yet'}
+          description={
+            'Start building your professional profile by adding your first work experience.'
+          }
+          buttonLabel={'Add Your First Experience'}
+          onClick={handleAddExperience}
+        />
       )}
     </div>
   );
