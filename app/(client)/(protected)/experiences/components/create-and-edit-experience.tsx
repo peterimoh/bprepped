@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Control, type UseFormReturn } from 'react-hook-form';
 import { Award, Briefcase, Save, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { TagInput, type Tag } from 'tagmento';
@@ -23,9 +23,17 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useState, useEffect } from 'react';
-import { useCreateUserExperience } from '@/lib/api-hooks/experiences';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import {
+  CreateExperienceData,
+  useCreateUserExperience,
+  UserExperience,
+  useUpdateExperience,
+} from '@/lib/api-hooks/experiences';
+import { toast } from '@/hooks/use-toast';
+import { Editor } from '@/components/ui/editor/editor';
+import { useQueryClient } from '@tanstack/react-query';
+import { format, isValid, parseISO } from 'date-fns';
 
 const ValidationSchema = z
   .object({
@@ -62,8 +70,8 @@ const ValidationSchema = z
 type FormData = z.infer<typeof ValidationSchema>;
 
 interface CreateAndEditExperienceProps {
-  actionType: 'create' | 'edit';
-  experience?: any;
+  actionType: 'create' | 'edit' | null;
+  experience?: UserExperience;
   onCancel: () => void;
 }
 
@@ -78,126 +86,257 @@ const employmentTypes = [
   'Seasonal',
 ];
 
+function _technologies(technologies: Array<string>): Tag[] {
+  if (!technologies || !technologies.length) return [];
+
+  return technologies.map((technology) => ({
+    id: technology,
+    text: technology,
+  }));
+}
+
+function transformToArray(input: string | string[]): string[] {
+  if (Array.isArray(input)) return input;
+  return input
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function formatDateForMonthInput(
+  date: string | Date | null | undefined
+): string {
+  if (!date) return '';
+
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  if (!isValid(dateObj)) return '';
+  return format(dateObj, 'yyyy-MM');
+}
+
+function transformToApiData(data: FormData): CreateExperienceData {
+  return {
+    company: data.company,
+    position: data.position,
+    location: data.location,
+    employment_type: data.employment_type,
+    start_date: data.startDate,
+    end_date: data.endDate,
+    is_current: data.current.toString(),
+    description: data.description,
+    technologies: transformToArray(data.technologies),
+    achievements: data.achievements,
+    responsibilities: data.responsibilities,
+  };
+}
+
+function EditorField({
+  form,
+  name,
+  label,
+}: {
+  form: UseFormReturn<FormData>;
+  name: 'achievements' | 'responsibilities';
+  label: string;
+}) {
+  return (
+    <FormField
+      name={name}
+      control={form.control}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Editor
+              onChange={(value) => form.setValue(name, value)}
+              options={['bulletList']}
+              content={field.value}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function InputField({
+  control,
+  name,
+  label,
+  placeholder,
+}: {
+  control: Control<FormData>;
+  name: 'company' | 'position' | 'location';
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input placeholder={placeholder} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function DateField({
+  control,
+  name,
+  label,
+  isDisabled = false,
+}: {
+  control: Control<FormData>;
+  name: 'startDate' | 'endDate';
+  label: string;
+  isDisabled?: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input
+              type="month"
+              {...field}
+              disabled={isDisabled}
+              value={isDisabled ? '' : field.value}
+              onChange={(e) => {
+                if (!isDisabled) {
+                  field.onChange(e.target.value);
+                }
+              }}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function TextareaField({
+  control,
+  name,
+  label,
+  placeholder,
+}: {
+  control: Control<FormData>;
+  name: 'description';
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Textarea placeholder={placeholder} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function getMutationOptions(
+  action: 'create' | 'update',
+  queryClient: ReturnType<typeof useQueryClient>,
+  onCancel: () => void
+) {
+  const title =
+    action === 'create'
+      ? 'Experience created successfully'
+      : 'Experience updated successfully';
+  const errorTitle =
+    action === 'create'
+      ? 'Failed to create experience'
+      : 'Failed to update experience';
+
+  return {
+    onSuccess: () => {
+      toast({ title });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      onCancel();
+    },
+    onError: (error: { error: string }) => {
+      toast({
+        title: errorTitle,
+        description: error.error,
+        variant: 'destructive',
+      });
+    },
+  };
+}
+
 export function CreateAndEditExperience({
   actionType,
   experience,
   onCancel,
 }: CreateAndEditExperienceProps) {
-  const [tags, setTags] = useState<Tag[]>([]);
+  const queryClient = useQueryClient();
+
+  const [tags, setTags] = useState<Tag[]>(
+    experience?.technologies ? _technologies(experience.technologies) : []
+  );
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
 
-  // Create and update mutations
   const createMutation = useCreateUserExperience();
-
-  // Determine if we're in a loading state
-  const isLoading = createMutation.isPending;
-
-  // Get error state
-  const error = createMutation.error;
+  const updateMutation = useUpdateExperience(experience?.id || 0);
 
   const form = useForm<FormData>({
     resolver: zodResolver(ValidationSchema),
     defaultValues: {
-      company: '',
-      position: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-      current: false,
-      description: '',
-      technologies: '',
-      achievements: '',
-      responsibilities: '',
+      company: experience?.company || '',
+      position: experience?.position || '',
+      location: experience?.location || '',
+      employment_type: experience?.employmentType || '',
+      startDate: formatDateForMonthInput(experience?.startDate || null),
+      endDate: formatDateForMonthInput(experience?.endDate || null),
+      current: experience?.isCurrent,
+      description: experience?.description || '',
+      technologies: experience?.technologies
+        ? experience.technologies.join(', ')
+        : '',
+      achievements: experience?.achievements || '',
+      responsibilities: experience?.responsibilities || '',
     },
   });
 
-  // Populate form with experience data when in edit mode
-  // useEffect(() => {
-  //   if (experienceData && actionType === 'edit') {
-  //     // Convert date objects to YYYY-MM format for month input
-  //     const formatDate = (date: Date | null | string) => {
-  //       if (!date) return '';
-  //       const d = new Date(date);
-  //       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  //     };
-  //
-  //     // Convert technologies array to comma-separated string for display
-  //     const technologiesString = Array.isArray(experienceData.technologies)
-  //       ? experienceData.technologies.join(', ')
-  //       : experienceData.technologies || '';
-  //
-  //     // Convert tags from technologies for TagInput
-  //     const techTags = Array.isArray(experienceData.technologies)
-  //       ? experienceData.technologies.map((tech, index) => ({
-  //           id: index.toString(),
-  //           text: tech,
-  //         }))
-  //       : [];
-  //
-  //     setTags(techTags);
-  //
-  //     form.reset({
-  //       company: experienceData.company || '',
-  //       position: experienceData.position || '',
-  //       location: experienceData.location || '',
-  //       startDate: formatDate(experienceData.startDate),
-  //       endDate: formatDate(experienceData.endDate),
-  //       current: experienceData.isCurrent || false,
-  //       description: experienceData.description || '',
-  //       technologies: technologiesString,
-  //       achievements: experienceData.achievements || '',
-  //       responsibilities: experienceData.responsibilities || '',
-  //       employment_type: experienceData.employmentType || '',
-  //     });
-  //   }
-  // }, [experienceData, actionType, form]);
+  if (!actionType || actionType === null) return null;
 
-  // Watch the current field to disable end date when checked
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const error = createMutation.error || updateMutation.error;
+
   const isCurrent = form.watch('current');
 
   const onSubmit = (data: FormData) => {
-    // Convert technologies string to array
-    const technologiesArray = data.technologies
-      ? data.technologies
-          .split(',')
-          .map((tech) => tech.trim())
-          .filter(Boolean)
-      : [];
-
-    const submitData = {
-      company: data.company,
-      position: data.position,
-      location: data.location,
-      employment_type: data.employment_type,
-      start_date: data.startDate,
-      end_date: data.endDate,
-      is_current: data.current,
-      description: data.description,
-      technologies: technologiesArray,
-      achievements: data.achievements,
-      responsibilities: data.responsibilities,
-    };
+    const apiData = transformToApiData(data);
 
     if (actionType === 'create') {
-      createMutation.mutate(submitData, {
-        onSuccess: () => {
-          toast.success('Experience created successfully!');
-          onCancel();
-        },
-        onError: (error) => {
-          toast.error(`Failed to create experience: ${error.error}`);
-        },
-      });
-    } else {
-      // updateMutation.mutate(submitData, {
-      //   onSuccess: () => {
-      //     toast.success('Experience updated successfully!');
-      //     onCancel();
-      //   },
-      //   onError: (error) => {
-      //     toast.error(`Failed to update experience: ${error.error}`);
-      //   },
-      // });
+      createMutation.mutate(
+        apiData,
+        getMutationOptions('create', queryClient, onCancel)
+      );
+    } else if (actionType === 'edit') {
+      updateMutation.mutate(
+        apiData,
+        getMutationOptions('update', queryClient, onCancel)
+      );
     }
   };
 
@@ -223,59 +362,29 @@ export function CreateAndEditExperience({
                 </h3>
 
                 <div className="space-y-2">
-                  <FormField
+                  <InputField
                     control={form.control}
-                    name={'company'}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company Name *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={'e.g. TechCorp Solutions'}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{field.message}</FormMessage>
-                      </FormItem>
-                    )}
+                    name="company"
+                    label="Company Name *"
+                    placeholder="e.g. TechCorp Solutions"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <FormField
+                  <InputField
                     control={form.control}
-                    name={'position'}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Position *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={'e.g. Senior Frontend Developer'}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{field.message}</FormMessage>
-                      </FormItem>
-                    )}
+                    name="position"
+                    label="Position *"
+                    placeholder="e.g. Senior Frontend Developer"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <FormField
+                  <InputField
                     control={form.control}
-                    name={'location'}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Location *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={'e.g. San Francisco, CA'}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{field.message}</FormMessage>
-                      </FormItem>
-                    )}
+                    name="location"
+                    label="Location *"
+                    placeholder="e.g. San Francisco, CA"
                   />
                 </div>
 
@@ -310,46 +419,17 @@ export function CreateAndEditExperience({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name={'startDate'}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Start Date *</FormLabel>
-                          <FormControl>
-                            <Input type={'month'} {...field} />
-                          </FormControl>
-                          <FormMessage>{field.message}</FormMessage>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name={'endDate'}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>End Date {!isCurrent && '*'}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type={'month'}
-                              {...field}
-                              disabled={isCurrent}
-                              value={isCurrent ? '' : field.value}
-                              onChange={(e) => {
-                                if (!isCurrent) {
-                                  field.onChange(e.target.value);
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage>{field.message}</FormMessage>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <DateField
+                    control={form.control}
+                    name="startDate"
+                    label="Start Date *"
+                  />
+                  <DateField
+                    control={form.control}
+                    name="endDate"
+                    label={`End Date${isCurrent ? '' : ' *'}`}
+                    isDisabled={isCurrent}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -381,30 +461,18 @@ export function CreateAndEditExperience({
                 </h3>
 
                 <div className="space-y-2">
-                  <FormField
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description *</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            id="description"
-                            placeholder={
-                              'Brief overview of your role and responsibilities...'
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{field.message}</FormMessage>
-                      </FormItem>
-                    )}
-                    name={'description'}
+                  <TextareaField
+                    control={form.control}
+                    name="description"
+                    label="Description *"
+                    placeholder="Brief overview of your role and responsibilities..."
                   />
                 </div>
 
                 <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name={'technologies'}
+                    name="technologies"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -425,8 +493,8 @@ export function CreateAndEditExperience({
                             }}
                             activeTagIndex={activeTagIndex}
                             setActiveTagIndex={setActiveTagIndex}
-                            borderStyle={'default'}
-                            variant={'primary'}
+                            borderStyle="default"
+                            variant="primary"
                             {...field}
                           />
                         </FormControl>
@@ -436,44 +504,18 @@ export function CreateAndEditExperience({
                 </div>
 
                 <div className="space-y-2">
-                  <FormField
-                    name={'achievements'}
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Key Achievements</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            id="achievements"
-                            placeholder="• Improved performance by 40%&#10;• Led team of 5 developers&#10;• Reduced bugs by 60%"
-                            rows={4}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{field.message}</FormMessage>
-                      </FormItem>
-                    )}
+                  <EditorField
+                    form={form}
+                    name="achievements"
+                    label="Key Achievements"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <FormField
-                    name={'responsibilities'}
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Responsibilities</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            id="responsibilities"
-                            placeholder="• Developed frontend applications&#10;• Conducted code reviews&#10;• Mentored junior developers"
-                            rows={4}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{field.message}</FormMessage>
-                      </FormItem>
-                    )}
+                  <EditorField
+                    form={form}
+                    name="responsibilities"
+                    label="Responsibilities"
                   />
                 </div>
               </div>

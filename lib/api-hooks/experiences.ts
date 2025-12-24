@@ -11,9 +11,9 @@ export interface UserExperience {
   endDate: Date | null;
   isCurrent: boolean;
   description: string | null;
-  technologies: any | null;
-  achievements: any | null;
-  responsibilities: any | null;
+  technologies: string[] | null;
+  achievements: string | null;
+  responsibilities: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,11 +54,11 @@ export interface CreateExperienceData {
   employment_type?: string;
   start_date?: string;
   end_date?: string;
-  is_current?: boolean;
+  is_current?: string;
   description?: string;
   technologies?: string[];
-  achievements?: string[];
-  responsibilities?: string[];
+  achievements?: string;
+  responsibilities?: string;
 }
 
 export interface UpdateExperienceData {
@@ -68,11 +68,11 @@ export interface UpdateExperienceData {
   employment_type?: string;
   start_date?: string;
   end_date?: string;
-  is_current?: boolean;
+  is_current?: string;
   description?: string;
   technologies?: string[];
-  achievements?: string[];
-  responsibilities?: string[];
+  achievements?: string;
+  responsibilities?: string;
 }
 
 export function useGetExperiences(params?: UseGetExperiencesParams) {
@@ -108,7 +108,9 @@ export function useGetExperiences(params?: UseGetExperiencesParams) {
         },
       });
 
-      const data = (await response.json()) as ExperiencesResponse | ExperiencesError;
+      const data = (await response.json()) as
+        | ExperiencesResponse
+        | ExperiencesError;
 
       if (!response.ok) {
         throw data as ExperiencesError;
@@ -153,7 +155,9 @@ export function useUpdateExperience(id: number) {
         body: JSON.stringify(data),
       });
 
-      const result = (await response.json()) as UserExperience | ExperiencesError;
+      const result = (await response.json()) as
+        | UserExperience
+        | ExperiencesError;
 
       if (!response.ok) {
         throw result as ExperiencesError;
@@ -164,9 +168,9 @@ export function useUpdateExperience(id: number) {
   });
 }
 
-export function useDeleteExperience(id: number) {
-  return useMutation<{ message: string }, ExperiencesError, void>({
-    mutationFn: async (): Promise<{ message: string }> => {
+export function useDeleteExperience() {
+  return useMutation<{ message: string }, ExperiencesError, number>({
+    mutationFn: async (id: number): Promise<{ message: string }> => {
       const response = await fetch(`/api/experiences/${id}`, {
         method: 'DELETE',
         headers: {
@@ -174,7 +178,9 @@ export function useDeleteExperience(id: number) {
         },
       });
 
-      const result = (await response.json()) as { message: string } | ExperiencesError;
+      const result = (await response.json()) as
+        | { message: string }
+        | ExperiencesError;
 
       if (!response.ok) {
         throw result as ExperiencesError;
@@ -196,7 +202,9 @@ export function useCreateUserExperience() {
         body: JSON.stringify(data),
       });
 
-      const result = (await response.json()) as UserExperience | ExperiencesError;
+      const result = (await response.json()) as
+        | UserExperience
+        | ExperiencesError;
 
       if (!response.ok) {
         throw result as ExperiencesError;

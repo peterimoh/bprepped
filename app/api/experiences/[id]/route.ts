@@ -159,7 +159,6 @@ export async function DELETE(
       return new NotFoundError('Account not found');
     }
 
-    // Check if the experience exists and belongs to the user
     const existingExperience = await prisma.userExperience.findFirst({
       where: {
         id,

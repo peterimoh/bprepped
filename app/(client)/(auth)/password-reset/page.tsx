@@ -26,6 +26,7 @@ import { Logo } from '@/components/ui/logo';
 import { useRouter } from 'next/navigation';
 import { Path } from '@/lib/path';
 import { useValidateResetToken, useResetPassword } from '@/lib/api-hooks/auth';
+import { LoadingSpinner } from '@/components/ui/loader';
 
 const FormSchema = z
   .object({
@@ -117,25 +118,6 @@ function TokenInvalid() {
         >
           Request New Reset Link
         </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function LoadingSpinner() {
-  return (
-    <Card className="relative z-10 w-full max-w-md border-2 bg-white shadow-elevated">
-      <CardHeader className="text-center">
-        <div className="mb-4 flex justify-center">
-          <Logo />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6 text-center">
-        <div className="flex justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
-        </div>
-
-        <p className={'py-4'}>Loading...</p>
       </CardContent>
     </Card>
   );
