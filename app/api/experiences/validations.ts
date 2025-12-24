@@ -23,14 +23,8 @@ const createExperienceSchema = z.object({
     .array(z.string())
     .optional()
     .transform((val) => (val ? val : [])),
-  achievements: z
-    .array(z.string())
-    .optional()
-    .transform((val) => (val ? val : [])),
-  responsibilities: z
-    .array(z.string())
-    .optional()
-    .transform((val) => (val ? val : [])),
+  achievements: z.string().optional(),
+  responsibilities: z.string().optional(),
 });
 
 const getQueryParamsSchema = z.object({
@@ -71,22 +65,21 @@ const updateExperienceSchema = z.object({
   technologies: z
     .array(z.string())
     .optional()
-    .transform((val) => (val ? val : []))
-    .optional(),
-  achievements: z
-    .array(z.string())
-    .optional()
-    .transform((val) => (val ? val : []))
-    .optional(),
-  responsibilities: z
-    .array(z.string())
-    .optional()
-    .transform((val) => (val ? val : []))
-    .optional(),
+    .transform((val) => (val ? val : [])),
+  achievements: z.string().optional(),
+  responsibilities: z.string().optional(),
 });
 
 const idSchema = z.object({
-  id: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(1)),
+  id: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().int().min(1)),
 });
 
-export { createExperienceSchema, updateExperienceSchema, getQueryParamsSchema, idSchema };
+export {
+  createExperienceSchema,
+  updateExperienceSchema,
+  getQueryParamsSchema,
+  idSchema,
+};

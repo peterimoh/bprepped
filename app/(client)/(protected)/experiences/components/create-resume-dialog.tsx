@@ -12,23 +12,32 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { UserExperience } from '@/lib/api-hooks/experiences';
+import { format, parseISO } from 'date-fns';
+
+interface Template {
+  id: string;
+  name: string;
+  preview: string;
+}
 
 export interface CreateResumeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  experiences: never[];
-  templates: never[];
-  selectedTemplate: never;
-  setSelectedTemplate: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedExperiences: never[];
+  experiences: UserExperience[];
+  templates: Template[];
+  selectedTemplate: string;
+  setSelectedTemplate: React.Dispatch<React.SetStateAction<string>>;
+  selectedExperiences: number[];
   handleCreateResume: () => void;
   onSelectAll: (checked: boolean) => void;
+  handleExperienceSelection: (experienceId: number, checked: boolean) => void;
+  isLoading?: boolean;
 }
 
 export function CreateResumeDialog({
@@ -41,19 +50,11 @@ export function CreateResumeDialog({
   selectedExperiences,
   handleCreateResume,
   onSelectAll,
+  handleExperienceSelection,
+  isLoading = false,
 }: CreateResumeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className={'border-1 bg-white'}
-          disabled={experiences.length === 0}
-        >
-          <FileText className="mr-2 h-4 w-4" />
-          Create Resume from Experiences
-        </Button>
-      </DialogTrigger>
       <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
@@ -114,73 +115,105 @@ export function CreateResumeDialog({
             </div>
 
             <div className="max-h-60 space-y-3 overflow-y-auto">
-              {experiences.map((experience) => (
-                <Card key={experience.id} className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id={`exp-${experience.id}`}
-                      checked={selectedExperiences.includes(experience.id)}
-                      onCheckedChange={(checked) =>
-                        handleExperienceSelection(
-                          experience.id,
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <div className="flex-1">
-                      <Label
-                        htmlFor={`exp-${experience.id}`}
-                        className="cursor-pointer"
-                      >
-                        <div className="mb-2 flex items-center gap-3">
-                          <Building className="h-4 w-4 text-primary" />
-                          <h4 className="font-semibold text-foreground">
-                            {experience.company}
-                          </h4>
-                        </div>
-                        <div className="mb-2 flex items-center gap-2">
-                          <Briefcase className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm font-medium text-foreground">
-                            {experience.position}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            <span>{experience.location}</span>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                  Loading experiences...
+                </div>
+              ) : experiences.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Briefcase className="mb-3 h-12 w-12 text-muted-foreground" />
+                  <p className="mb-1 font-medium text-foreground">
+                    No experiences available
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Add some work experiences first to create a resume
+                  </p>
+                </div>
+              ) : (
+                experiences.map((experience) => (
+                  <Card key={experience.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id={`exp-${experience.id}`}
+                        checked={selectedExperiences.includes(experience.id)}
+                        onCheckedChange={(checked) =>
+                          handleExperienceSelection(
+                            experience.id,
+                            checked as boolean
+                          )
+                        }
+                      />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor={`exp-${experience.id}`}
+                          className="cursor-pointer"
+                        >
+                          <div className="mb-2 flex items-center gap-3">
+                            <Building className="h-4 w-4 text-primary" />
+                            <h4 className="font-semibold text-foreground">
+                              {experience.company}
+                            </h4>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>
-                              {experience.startDate} - {experience.endDate}
+                          <div className="mb-2 flex items-center gap-2">
+                            <Briefcase className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">
+                              {experience.position}
                             </span>
                           </div>
-                        </div>
-                        {experience.technologies.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {experience.technologies
-                              .slice(0, 3)
-                              .map((tech, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
-                                  {tech}
-                                </Badge>
-                              ))}
-                            {experience.technologies.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{experience.technologies.length - 3} more
-                              </Badge>
-                            )}
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              <span>{experience.location}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>
+                                {experience.startDate
+                                  ? format(
+                                      parseISO(String(experience.startDate)),
+                                      'MMMM yyyy'
+                                    )
+                                  : 'Present'}
+                                {' - '}
+                                {experience.endDate
+                                  ? format(
+                                      parseISO(String(experience.endDate)),
+                                      'MMMM yyyy'
+                                    )
+                                  : 'Present'}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </Label>
+                          {experience.technologies &&
+                            experience.technologies.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {experience.technologies
+                                  .slice(0, 3)
+                                  .map((tech, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="text-xs capitalize"
+                                    >
+                                      {tech}
+                                    </Badge>
+                                  ))}
+                                {experience.technologies.length > 3 && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs capitalize"
+                                  >
+                                    +{experience.technologies.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                        </Label>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -191,7 +224,11 @@ export function CreateResumeDialog({
             </Button>
             <Button
               onClick={handleCreateResume}
-              disabled={selectedExperiences.length === 0}
+              disabled={
+                isLoading ||
+                experiences.length === 0 ||
+                selectedExperiences.length === 0
+              }
             >
               <ArrowRight className="mr-2 h-4 w-4" />
               Create Resume ({selectedExperiences.length} selected)
