@@ -247,12 +247,15 @@ const TemplateExtractor = () => {
   ) => {
     if (!extractedTemplate) return;
 
-    setExtractedTemplate((prev) => ({
-      ...prev!,
-      sections: prev.sections.map((section) =>
-        section.id === sectionId ? { ...section, ...updates } : section
-      ),
-    }));
+    setExtractedTemplate((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        sections: prev.sections.map((section) =>
+          section.id === sectionId ? { ...section, ...updates } : section
+        ),
+      };
+    });
   };
 
   return (

@@ -1,52 +1,65 @@
-import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import type { Session } from 'next-auth';
-import { UnAuthorizedError } from './custom-error';
+import { UnAuthorizedError } from '@/lib/backend';
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  fullName: string | null;
+  role: string | null;
+  phone: string | null;
+  bio: string | null;
+  isActive: boolean;
+  avatarUrl: string | null;
+  location: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AuthenticatedSession extends Session {
+  user: AuthUser;
+}
 
 /**
- * Gets the current session for API routes.
- * Returns the session if authenticated, or null if not authenticated.
- * Use this when you need to handle unauthenticated requests differently.
+ * Retrieves the current session for API routes.
+ *
+ * @returns {Promise<Session | null>} The session if authenticated, or null otherwise.
+ * @example
+ * const session = await getApiSession();
+ * if (session) {
+ *   // do something
+ * }
  */
 export async function getApiSession(): Promise<Session | null> {
   return await getServerSession(authOptions);
 }
 
 /**
- * Requires authentication for API routes.
- * Returns the session if authenticated, or throws UnAuthorizedError if not.
- * Use this when the route must be protected.
+ * Protects an API route by requiring a valid session.
  *
- * @throws {UnAuthorizedError} If the user is not authenticated
+ * @returns {Promise<AuthenticatedSession>} The authenticated session.
+ * @throws {UnAuthorizedError} If the user is not authenticated or session is invalid.
  *
  * @example
- * ```ts
  * export async function GET() {
  *   try {
  *     const session = await requireAuth();
- *     // Use session.user here
- *   } catch (e) {
- *     return formatRequestError(e);
+ *     const userId = session.user.id;
+ *     // ... business logic
+ *   } catch (error) {
+ *     return formatRequestError(error);
  *   }
  * }
- * ```
  */
-export async function requireAuth(): Promise<Session> {
-  const session = await getServerSession(authOptions);
+export async function requireAuth(): Promise<AuthenticatedSession> {
+  const session = (await getServerSession(
+    authOptions
+  )) as AuthenticatedSession | null;
 
-  if (!session) {
-    throw new UnAuthorizedError('unauthorized');
+  if (!session?.user?.email) {
+    throw new UnAuthorizedError('Authentication required');
   }
 
   return session;
-}
-
-/**
- * Type guard to check if the result from requireAuth is a NextResponse (error).
- */
-export function isAuthError(
-  result: Session | NextResponse<{ error: string }>
-): result is NextResponse<{ error: string }> {
-  return result instanceof NextResponse;
 }

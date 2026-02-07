@@ -67,7 +67,7 @@ export default function ForgotPassword() {
   });
   const { isPending, isError, error, mutate, isSuccess } = useForgotPassword();
 
-  const onSubmit = (value) => {
+  const onSubmit = (value: FormData) => {
     mutate({ email: value.email });
   };
 
@@ -120,7 +120,7 @@ export default function ForgotPassword() {
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage>{field.message}</FormMessage>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

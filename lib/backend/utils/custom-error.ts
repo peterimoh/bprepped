@@ -44,6 +44,12 @@ export class ForbiddenError extends CustomError {
   }
 }
 
+export class ConflictError extends CustomError {
+  constructor(message: string) {
+    super('ConflictError', 'CONFLICT', message);
+  }
+}
+
 export class UnAuthorizedError extends CustomError {
   constructor(message: string = 'Unauthorized') {
     super('UnAuthorizedError', 'UNAUTHORIZED', message);

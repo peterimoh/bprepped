@@ -108,8 +108,8 @@ export default function Signup() {
             {
               onSuccess: async () => {
                 const finalSession = await getSession();
-                const { user } = finalSession;
-                const isAdmin = await IsManagement(user);
+                const user = finalSession?.user;
+                const isAdmin = await IsManagement(user as any);
 
                 if (isAdmin) {
                   router.push(Path.Admin.Root);
@@ -161,7 +161,7 @@ export default function Signup() {
                       ))}
                     </div>
                   ) : (
-                    `Error: ${error?.error || error?.message || 'Registration failed'}`
+                    `Error: ${error?.error || (error as any)?.message || 'Registration failed'}`
                   )}
                 </AlertDescription>
               </Alert>
@@ -190,7 +190,7 @@ export default function Signup() {
                     <FormControl>
                       <Input placeholder="John" autoComplete="off" {...field} />
                     </FormControl>
-                    <FormMessage>{field.message}</FormMessage>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -204,7 +204,7 @@ export default function Signup() {
                     <FormControl>
                       <Input placeholder="Doe" autoComplete="off" {...field} />
                     </FormControl>
-                    <FormMessage>{field.message}</FormMessage>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -223,7 +223,7 @@ export default function Signup() {
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -241,7 +241,7 @@ export default function Signup() {
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -259,7 +259,7 @@ export default function Signup() {
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -278,7 +278,7 @@ export default function Signup() {
                       }}
                     />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />

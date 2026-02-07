@@ -1,35 +1,16 @@
 import { NextResponse } from 'next/server';
-import {
-  formatRequestError,
-  NotFoundError,
-  CustomError,
-} from '@/lib/backend/utils';
-import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
-
-const validationSchema = z.object({
-  token: z.string().uuid(),
-});
+import { formatRequestError } from '@/lib/backend/utils/request-error-handler';
+import { authService, VerifyTokenSchema } from '@/lib/backend/services/auth-service';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const data = validationSchema.parse(body);
+    const validatedData = VerifyTokenSchema.parse(body);
 
-    const token = await prisma.passwordResetToken.findFirst({
-      where: { token: data.token },
-    });
+    const result = await authService.verifyResetToken(validatedData);
 
-    if (!token) {
-      throw new NotFoundError('token not found');
-    }
-
-    if (token.expires < new Date()) {
-      throw new CustomError('ExpiredTokenError', 'BAD_REQUEST', 'expired');
-    }
-
-    return NextResponse.json({ message: 'success' }, { status: 200 });
-  } catch (e) {
-    return formatRequestError(e);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    return formatRequestError(error);
   }
 }

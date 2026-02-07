@@ -14,14 +14,30 @@ export interface SendEmailOptions {
   text?: string;
   html?: string;
   markdown?: string;
-  template?: string; // optional HTML template with {{body}} and tokens
+  template?: string;
   templateData?: TemplateData;
 }
 
-const HTML_TO_TEXT_CONFIG = { wordwrap: 130 } as const;
-const DEFAULT_MAX_ATTEMPTS = Number(process.env.EMAIL_SEND_ATTEMPTS || 2);
+interface NotificationConfig {
+  smtp: {
+    host: string;
+    port: number;
+    user?: string;
+    pass?: string;
+    secure: boolean;
+    pool: boolean;
+  };
+  email: {
+    from: string;
+    logoUrl: string;
+    footerText: string;
+    sendAttempts: number;
+  };
+}
 
-const SANITIZE_CONFIG: any = {
+const HTML_TO_TEXT_CONFIG = { wordwrap: 130 } as const;
+
+const SANITIZE_CONFIG: sanitizeHtml.IOptions = {
   allowedTags: [...sanitizeHtml.defaults.allowedTags, 'img'],
   allowedAttributes: {
     ...sanitizeHtml.defaults.allowedAttributes,
@@ -31,164 +47,144 @@ const SANITIZE_CONFIG: any = {
 };
 
 export class NotificationService {
-  transporter: nodemailer.Transporter;
+  private readonly transporter: nodemailer.Transporter;
+  private readonly config: NotificationConfig;
 
   constructor() {
+    this.config = this.loadConfig();
     this.transporter = this.createTransporter();
   }
 
-  private createTransporter() {
-    const host = process.env.SMTP_HOST || 'localhost';
+  private loadConfig(): NotificationConfig {
     const port = Number(process.env.SMTP_PORT || 1025);
-    const user = process.env.SMTP_USER || undefined;
-    const pass = process.env.SMTP_PASS || undefined;
+    return {
+      smtp: {
+        host: process.env.SMTP_HOST || 'localhost',
+        port,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+        secure: process.env.SMTP_SECURE === 'true' || port === 465,
+        pool: process.env.SMTP_POOL === 'true',
+      },
+      email: {
+        from: process.env.EMAIL_FROM || 'noreply@bprepped.ai',
+        logoUrl: process.env.EMAIL_LOGO_URL || '',
+        footerText: process.env.EMAIL_FOOTER || 'If you did not ask for this, ignore it.',
+        sendAttempts: Number(process.env.EMAIL_SEND_ATTEMPTS || 2),
+      },
+    };
+  }
 
-    const secureEnv = (() => {
-      if (process.env.SMTP_SECURE !== undefined)
-        return process.env.SMTP_SECURE === 'true';
-      return port === 465;
-    })();
+  /**
+   * Creates the Nodemailer transporter.
+   */
+  private createTransporter(): nodemailer.Transporter {
+    const { host, port, secure, user, pass, pool } = this.config.smtp;
 
-    const transporter = nodemailer.createTransport({
+    return nodemailer.createTransport({
       host,
       port,
-      secure: secureEnv,
+      secure,
       auth: user && pass ? { user, pass } : undefined,
-      pool: process.env.SMTP_POOL === 'true' || false,
-      connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 10_000),
-      greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10_000),
-    });
-
-    return transporter;
+      pool,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+    } as nodemailer.TransportOptions);
   }
 
-  private dedent(s = ''): string {
-    const str = String(s).replace(/\t/g, '    ');
-    const lines = str.split('\n');
-    while (lines.length && lines[0].trim() === '') lines.shift();
-    while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
-    const indents = lines
-      .filter((l) => l.trim())
-      .map((l) => l.match(/^ */)![0].length);
-    const minIndent = indents.length ? Math.min(...indents) : 0;
-    return lines.map((l) => l.slice(minIndent)).join('\n');
+  /**
+   * Sends an email with retry logic.
+   */
+  async sendEmail(options: SendEmailOptions): Promise<any> {
+    const { html, text } = await this.prepareContent(options);
+
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= this.config.email.sendAttempts; attempt++) {
+      try {
+        return await this.transporter.sendMail({
+          from: options.from || this.config.email.from,
+          to: options.to,
+          subject: options.subject,
+          text,
+          html,
+        });
+      } catch (error) {
+        lastError = error;
+        if (attempt < this.config.email.sendAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, Math.min(200 * attempt, 2000)));
+        }
+      }
+    }
+
+    throw lastError;
   }
 
-  private markdownToSafeHtml(md: string): string {
-    if (!md) return '';
-    const source = this.dedent(md);
-    const rawHtml = marked(source);
-    if (typeof rawHtml !== 'string') return '';
-    return sanitizeHtml(rawHtml, SANITIZE_CONFIG);
-  }
+  private async prepareContent(options: SendEmailOptions): Promise<{ html: string; text: string }> {
+    const templateData = {
+      logoUrl: this.config.email.logoUrl,
+      footerText: this.config.email.footerText,
+      ...options.templateData,
+    };
 
-  private renderTemplate(template: string, data: TemplateData = {}): string {
-    const escapeHtml = (s: string) =>
-      s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
-    return template.replace(/{{\s*([a-zA-Z0-9_\-]+)\s*}}/g, (match, token) => {
-      const raw = data[token];
-      if (raw === undefined || raw === null) return '';
-      if (token === 'body') return String(raw);
-      return escapeHtml(String(raw));
-    });
-  }
-
-  private wrapAndInline(
-    htmlBody: string,
-    template: string,
-    templateData: TemplateData
-  ) {
-    const bodyInlineStyles =
-      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;' +
-      'color:#111827; font-size:16px; line-height:1.5;';
-
-    const elementResets = `
-      <style>
-        h1,h2,h3,h4,h5{margin:0 0 12px 0; font-weight:700;}
-        p{margin:0 0 12px 0;}
-        ul,ol{margin:0 0 12px 16px; padding-left:16px;}
-        a{color:#2545e0; text-decoration:none;}
-      </style>
-    `;
-
-    const bodyWrapped = `<div style="${bodyInlineStyles}">${elementResets}${htmlBody}</div>`;
-    const rawTemplate = template || defaultTemplate;
-
-    const withBody = rawTemplate
-      .replace(/{{\s*body\s*}}/g, bodyWrapped)
-      .replace(/{{\s*logoUrl\s*}}/g, String(templateData.logoUrl || ''))
-      .replace(/{{\s*footerText\s*}}/g, String(templateData.footerText || ''));
-
-    const inlined = juice(withBody);
-    return inlined;
-  }
-
-  private generateTextFromHtml(html: string) {
-    return htmlToText(html, HTML_TO_TEXT_CONFIG);
-  }
-
-  async sendEmail(options: SendEmailOptions) {
-    const template = options.template || defaultTemplate;
-    const templateData: TemplateData = Object.assign(
-      {
-        logoUrl: process.env.EMAIL_LOGO_URL || '',
-        footerText:
-          process.env.EMAIL_FOOTER || 'If you did not ask for this, ignore it.',
-      },
-      options.templateData || {}
-    );
-
-    let html = options.html ?? '';
-    let text = options.text ?? '';
+    let html = options.html || '';
 
     if (options.markdown) {
       html = this.markdownToSafeHtml(options.markdown);
     }
 
     if (html) {
-      const final = this.wrapAndInline(html, template, templateData);
-      html = final;
-      text = text || this.generateTextFromHtml(final);
-    } else if (!html && template) {
-      const rendered = this.renderTemplate(template, templateData);
+      html = this.wrapAndInline(html, options.template || defaultTemplate, templateData);
+    } else if (options.template || defaultTemplate) {
+      const rendered = this.renderTemplate(options.template || defaultTemplate, templateData);
       html = juice(rendered);
-      text = text || this.generateTextFromHtml(html);
     }
 
-    html = html || '';
-    text = text || '';
+    const text = options.text || htmlToText(html, HTML_TO_TEXT_CONFIG);
 
-    const maxAttempts = Number(
-      process.env.EMAIL_SEND_ATTEMPTS || DEFAULT_MAX_ATTEMPTS
-    );
-    let attempt = 0;
-    let lastError: unknown = null;
+    return { html, text };
+  }
 
-    while (attempt < maxAttempts) {
-      try {
-        const info = await this.transporter.sendMail({
-          from: options.from || process.env.EMAIL_FROM,
-          to: options.to,
-          subject: options.subject,
-          text,
-          html,
-        });
-        return info;
-      } catch (err) {
-        lastError = err;
-        attempt += 1;
-        const backoff = Math.min(200 * attempt, 2000);
-        await new Promise((res) => setTimeout(res, backoff));
-      }
-    }
+  private dedent(str = ''): string {
+    const lines = str.replace(/\t/g, '    ').split('\n');
+    while (lines.length && lines[0].trim() === '') lines.shift();
+    while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
 
-    throw lastError;
+    const minIndent = lines
+      .filter((l) => l.trim())
+      .reduce((min, line) => {
+        const indent = line.match(/^ */)?.[0].length ?? 0;
+        return Math.min(min, indent);
+      }, Infinity);
+
+    return lines.map((l) => l.slice(minIndent === Infinity ? 0 : minIndent)).join('\n');
+  }
+
+  private markdownToSafeHtml(md: string): string {
+    if (!md) return '';
+    const rawHtml = marked(this.dedent(md));
+    return sanitizeHtml(typeof rawHtml === 'string' ? rawHtml : '', SANITIZE_CONFIG);
+  }
+
+  private renderTemplate(template: string, data: TemplateData): string {
+    const escapeHtml = (s: string) =>
+      s.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
+
+    return template.replace(/{{\s*([a-zA-Z0-9_\-]+)\s*}}/g, (match, token) => {
+      const value = data[token];
+      if (value === undefined || value === null) return '';
+      return token === 'body' ? String(value) : escapeHtml(String(value));
+    });
+  }
+
+  private wrapAndInline(htmlBody: string, template: string, data: TemplateData): string {
+    const bodyStyles = 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#111827;font-size:16px;line-height:1.5;';
+    const resets = '<style>h1,h2,h3,h4,h5{margin:0 0 12px 0;font-weight:700;}p{margin:0 0 12px 0;}ul,ol{margin:0 0 12px 16px;padding-left:16px;}a{color:#2545e0;text-decoration:none;}</style>';
+
+    const bodyWrapped = `<div style="${bodyStyles}">${resets}${htmlBody}</div>`;
+    const finalHtml = this.renderTemplate(template, { ...data, body: bodyWrapped });
+
+    return juice(finalHtml);
   }
 }
 

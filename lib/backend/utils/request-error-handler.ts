@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { CustomError, InternalServerError } from './custom-error';
+import { CustomError, InternalServerError } from '@/lib/backend';
 import { z } from 'zod';
 
 export function formatRequestError(error: unknown, defaultMessage?: string) {

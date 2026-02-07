@@ -50,14 +50,14 @@ export default function Login() {
     },
   });
 
-  const onSubmit = async (value): Promise<void> => {
+  const onSubmit = async (value: FormData): Promise<void> => {
     await mutate(value, {
       onSuccess: async () => {
         toast({ title: 'Welcome Back' });
 
         const finalSession = await getSession();
-        const { user } = finalSession;
-        const isAdmin = await IsManagement(user);
+        const user = finalSession?.user;
+        const isAdmin = await IsManagement(user as any);
 
         if (isAdmin) {
           router.push(Path.Admin.Root);
@@ -110,7 +110,7 @@ export default function Login() {
                   <FormControl>
                     <Input placeholder="john@host.com" {...field} />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -124,7 +124,7 @@ export default function Login() {
                   <FormControl>
                     <PasswordInput placeholder="••••••••" {...field} />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />

@@ -249,7 +249,7 @@ export default function PasswordReset() {
                   <FormControl>
                     <PasswordInput placeholder="••••••••" {...field} />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -263,7 +263,7 @@ export default function PasswordReset() {
                   <FormControl>
                     <PasswordInput placeholder="••••••••" {...field} />
                   </FormControl>
-                  <FormMessage>{field.message}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />

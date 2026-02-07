@@ -1,39 +1,13 @@
 import { NextResponse } from 'next/server';
-import {
-  requireAuth,
-  formatRequestError,
-  NotFoundError,
-} from '@/lib/backend/utils';
-import { prisma } from '@/lib/prisma';
+import { requireAuth, formatRequestError } from '@/lib/backend';
+import { kpiService } from '@/lib/backend/services/kpi-service';
 
 export async function GET() {
   try {
-    const { user } = await requireAuth();
-    const token = await prisma.tokenBalance.findFirst({
-      where: { userId: Number(user.id) },
-    });
+    const session = await requireAuth();
+    const kpis = await kpiService.getUserKpis(Number(session.user.id));
 
-    if (!token) throw new NotFoundError('No token created');
-
-    const resumes = await prisma.resume.count({
-      where: { userId: Number(user.id) },
-    });
-
-    const scans = await prisma.resumeScan.count({
-      where: { userId: Number(user.id) },
-    });
-
-    const preps = await prisma.interviewSession.count({
-      where: { userId: Number(user.id) },
-    });
-
-    return NextResponse.json({
-      current_balance: token.currentBalance,
-      total_purchased: token.totalPurchased,
-      resume_count: resumes,
-      scan_count: scans,
-      interview_prep_count: preps,
-    });
+    return NextResponse.json(kpis);
   } catch (e) {
     return formatRequestError(e);
   }

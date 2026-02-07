@@ -32,11 +32,11 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user) {
-            return { error: AuthErrorCode.ACCOUNT_NOT_FOUND };
+            return { error: AuthErrorCode.ACCOUNT_NOT_FOUND } as any;
           }
 
           if (!user.isActive) {
-            return { error: AuthErrorCode.ACCOUNT_LOCKED };
+            return { error: AuthErrorCode.ACCOUNT_LOCKED } as any;
           }
 
           const isHashVerified = await argon.verify(
@@ -45,12 +45,12 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isHashVerified) {
-            return { error: AuthErrorCode.INVALID_CREDENTIALS };
+            return { error: AuthErrorCode.INVALID_CREDENTIALS } as any;
           }
 
           return user;
         } catch (e) {
-          return { error: AuthErrorCode.SERVER_ERROR };
+          return { error: AuthErrorCode.SERVER_ERROR } as any;
         }
       },
     }),
@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
         const { password: _, ...userWithoutPassword } = user as typeof user & {
           password?: string;
         };
-        token.user = userWithoutPassword;
+        token.user = userWithoutPassword as any;
         // Explicitly set token.role for middleware compatibility
         token.role = userWithoutPassword.role || undefined;
         token.id = String(userWithoutPassword.id);
@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password: _, ...userWithoutPassword } =
           token.user as typeof token.user & { password?: string };
-        session.user = userWithoutPassword as typeof session.user;
+        session.user = userWithoutPassword as any;
         // Ensure role is set on session.user
         if (token.role) {
           session.user.role = token.role;
