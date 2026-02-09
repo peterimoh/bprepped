@@ -115,10 +115,8 @@ export class AuthService {
       return user;
     });
 
-    // 4. Send welcome email (asynchronous, don't block response)
-    this.sendWelcomeEmail(data.email, data.first_name).catch((error) => {
-      console.error('Failed to send welcome email:', error);
-    });
+    // 4. Send welcome email (asynchronous via queue)
+    this.enqueueWelcomeEmail(data.email, data.first_name);
 
     return result;
   }
@@ -132,11 +130,7 @@ export class AuthService {
       const { token } = await generateResetToken(user.email);
       if (!token) throw new InternalServerError('Request Failed');
 
-      this.sendPasswordResetEmail(user.email, user.fullName || '', token).catch(
-        (error) => {
-          console.error('Failed to send password reset email:', error);
-        }
-      );
+      this.enqueuePasswordResetEmail(user.email, user.fullName || '', token);
     }
 
     // Always return success to avoid email enumeration
@@ -193,7 +187,7 @@ export class AuthService {
     // 3. Hash the new password
     const hashedPassword = await argon.hash(data.password);
 
-    // 4. Update user password and delete the used token in a transaction
+    // 4. Update the user password and delete the used token in a transaction
     await prisma.$transaction(async (trx) => {
       await trx.user.update({
         where: { id: user.id },
@@ -229,8 +223,8 @@ export class AuthService {
     }
   }
 
-  private async sendWelcomeEmail(email: string, firstName: string) {
-    await notificationService.sendEmail({
+  private enqueueWelcomeEmail(email: string, firstName: string) {
+    notificationService.enqueueEmail({
       to: email,
       subject: 'Welcome to B-Prepped AI',
       markdown: `
@@ -249,10 +243,12 @@ Your first step to smarter AI workflows is just one click away.
 Best regards,
 The B-Prepped AI Team
       `,
+    }).catch((error) => {
+      console.error('Failed to enqueue welcome email:', error);
     });
   }
 
-  private async sendPasswordResetEmail(
+  private enqueuePasswordResetEmail(
     email: string,
     fullName: string,
     token: string
@@ -260,7 +256,7 @@ The B-Prepped AI Team
     const firstName = fullName.split(' ')[0] || 'there';
     const resetUrl = `${process.env.APP_URL}/password-reset?token=${token}`;
 
-    await notificationService.sendEmail({
+    notificationService.enqueueEmail({
       to: email,
       subject: 'Password Reset',
       markdown: `
@@ -282,6 +278,8 @@ Thank you for using our service!
 
 Best regards.
       `,
+    }).catch((error) => {
+      console.error('Failed to enqueue password reset email:', error);
     });
   }
 }

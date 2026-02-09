@@ -5,6 +5,8 @@ import juice from 'juice';
 import { htmlToText } from 'html-to-text';
 import { defaultTemplate } from '@/constants/email-template';
 
+import { getQueue, QUEUE_NAMES, SendEmailJob } from './backend/queue/client';
+
 type TemplateData = Record<string, string | number | boolean>;
 
 export interface SendEmailOptions {
@@ -90,6 +92,22 @@ export class NotificationService {
       connectionTimeout: 10_000,
       greetingTimeout: 10_000,
     } as nodemailer.TransportOptions);
+  }
+
+  /**
+   * Enqueues an email job to be processed in the background.
+   */
+  async enqueueEmail(options: SendEmailJob): Promise<string | null> {
+    try {
+      const queue = getQueue();
+      await queue.start();
+      return await queue.send(QUEUE_NAMES.SEND_EMAIL, options);
+    } catch (error) {
+      console.error('Failed to enqueue email job:', error);
+      // Fallback to direct sending if queue fails, or handle as per policy
+      // For now, we'll just log and let it fail to ensure reliability of the queue
+      throw error;
+    }
   }
 
   /**

@@ -127,7 +127,7 @@ export default function Home() {
                 Sign In
               </Button>
               <Button
-                onClick={() => navigate.push(Path.Client.Protected.Root)}
+                onClick={() => navigate.push(Path.Client.Auth.Signup)}
                 className="border-0 bg-gradient-to-r from-primary to-accent text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-accent/90 hover:shadow-xl"
               >
                 Get Started Free

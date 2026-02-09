@@ -33,9 +33,8 @@ export const Path = {
   },
 };
 
-// Helper function to create dynamic paths
+
 export const createPath = {
-  // Builder with ID
   builder: (id: string) => `${Path.Client.Protected.Builder}/${id}`,
 
   // Interview session with query params
